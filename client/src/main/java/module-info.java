@@ -7,6 +7,6 @@ module com.ltm.client {
     requires validatorfx;
     requires org.kordamp.bootstrapfx.core;
 
-    opens com.ltm.client to javafx.fxml;
+    opens com.ltm.client.Controller to javafx.fxml;
     exports com.ltm.client;
 }
