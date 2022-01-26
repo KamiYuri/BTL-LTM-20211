@@ -1,1 +1,2 @@
 ﻿con gà thắng
+kjk
