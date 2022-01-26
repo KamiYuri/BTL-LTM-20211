@@ -9,4 +9,5 @@ module com.ltm.client {
 
     opens com.ltm.client.Controller to javafx.fxml;
     exports com.ltm.client;
+    exports com.ltm.client.Utils;
 }
