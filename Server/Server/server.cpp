@@ -30,7 +30,7 @@ using namespace std;
 #define MAX_ROOM 1024
 #define ENDING_DELIMITER "\r\n"
 #define SPLITING_DELIMITER_1 "\t\n"
-#define SPLITING_DELIMITER_2 "\y\n"
+#define SPLITING_DELIMITER_2 "\v\n"
 
 struct user{
   string user_id;
@@ -70,6 +70,7 @@ string login(string email, string password){
             else return FAILED_LOGIN;
         }
     }    
+    return "not available yet";
 }
 
 //int logout(int user_id){}
@@ -105,6 +106,7 @@ string bid(int price, string room_id, string user_id, vector<room> &rooms){
             else return LOWER_THAN_CURRENT_PRICE;
         }
     }
+    return "not available yet";
 }
 
 string buy_immediately(string room_id, string user_id, vector<room> &rooms){
@@ -117,6 +119,7 @@ string buy_immediately(string room_id, string user_id, vector<room> &rooms){
             else return ALREADY_SOLD;
         }
     }  
+    return "not available yet";
 }
 
 string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<room> &rooms){
@@ -125,11 +128,26 @@ string create_room(string item_name, string item_description, int starting_price
     tmp_room.item_description = item_description;
     tmp_room.starting_price = starting_price;
     tmp_room.buy_immediately_price = buy_immediately_price;
+    tmp_room.room_id = "0000";
     if(tmp_room.starting_price > 0 && tmp_room.buy_immediately_price > tmp_room.starting_price){
         rooms.push_back(tmp_room);
         return SUCCESS_CREATE_ROOM;
     }
     else return INVALID_INFORMATION;
+}
+
+int main(){
+    string email = "vvt";
+    string password = "123";
+    string item_name = "bruh";
+    string item_description = "damn";
+    int starting_price = 69;
+    int buy_immediately_price = 96;
+    string room_id = "0000";
+    string user_id = "0000";
+    cout << create_room(item_name,item_description,starting_price,buy_immediately_price,rooms) << endl
+        << show_room(rooms) << endl 
+        << bid(80, room_id, user_id, rooms);
 }
 
 
