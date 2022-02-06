@@ -54,6 +54,7 @@ struct room{
   string owner = "-1"; //default = "-1", if item was sold then = user_id
 };
 vector<room> rooms;
+int id_count=0;
 
 string login(string email, string password){
     ifstream fileAcc;
@@ -128,8 +129,9 @@ string create_room(string item_name, string item_description, int starting_price
     tmp_room.item_description = item_description;
     tmp_room.starting_price = starting_price;
     tmp_room.buy_immediately_price = buy_immediately_price;
-    tmp_room.room_id = "0000";
     if(tmp_room.starting_price > 0 && tmp_room.buy_immediately_price > tmp_room.starting_price){
+        id_count++;
+        tmp_room.room_id = id_count;
         rooms.push_back(tmp_room);
         return SUCCESS_CREATE_ROOM;
     }
