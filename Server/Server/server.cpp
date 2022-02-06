@@ -306,8 +306,3 @@ void filter_request(string message, SOCKET client_socket) {
 		int starting_price = stoi(payload.substr(pre_delimiter_index + 2, spliting_delimiter_index - pre_delimiter_index - 2));
 		int buy_immediately_price = stoi(payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2));
 	}
-}
-
-
-
-// xử lý truyền dòng ở cả receive và send
