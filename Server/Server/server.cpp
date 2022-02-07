@@ -7,15 +7,17 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <string>
+#include <vector>
+#include <chrono>
+#include <ctime>
+#include <fstream>
 #include "process.h"
 #pragma comment(lib, "Ws2_32.lib")
 
 #define SERVER_ADDR "127.0.0.1"
 #define PORT 5500
 #define BUFF_SIZE 2048
-#define ENDING_DELIMITER "\r\n"
-#define SPLITING_DELIMITER_1 "\t\n"
-#define SPLITING_DELIMITER_2 "\y\n"
+
 using namespace std;
 
 char sendBuff[BUFF_SIZE], recvBuff[BUFF_SIZE], buff[BUFF_SIZE];
@@ -76,8 +78,11 @@ unsigned __stdcall echoThread(void* param) {
 	return 0;
 }
 
-User users[WSA_MAXIMUM_WAIT_EVENTS];
-Room rooms[10];
+vector<User> *users = new vector<User>();
+vector<Room> *rooms = new vector<Room>();
+int user_id_count = 0;
+int room_count = 0;
+
 // change room array to vector to have unlimited size
 void filter_request(string message, SOCKET client_socket);
 void log_in_handler(string email, string password, SOCKET client_socket);
@@ -92,15 +97,28 @@ void create_room_handler(
 	int starting_price,
 	int buy_immediately_price);
 
-void log_in_handler(string email, string password, SOCKET client_socket) {
-	strcpy_s(buff, email.length() + 1, &email[0]);
+void log_in_handler(string email, string password, char client_ip[INET_ADDRSTRLEN], int client_port, SOCKET client_socket) {
+	string message = login(email, password, client_ip, client_port, client_socket, users, &user_id_count);
+	strcpy_s(buff, message.length()+1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
 		printf("Error %d", WSAGetLastError());
 };
-void log_out_handler(string user_id) {};
+void log_out_handler(string user_id, SOCKET client_socket) {
+	string message = logout(user_id, users);
+	strcpy_s(buff, message.length() + 1, &message[0]);
+	ret = send(client_socket, buff, strlen(buff), 0);
+	if (ret == SOCKET_ERROR)
+		printf("Error %d", WSAGetLastError());
+};
 void show_rooms_handler() {};
-void join_room_handler(string room_id, string user_id) {};
+void join_room_handler(string room_id, string user_id, SOCKET client_socket) {
+	string message = join_room(room_id, user_id, rooms);
+	strcpy_s(buff, message.length() + 1, &message[0]);
+	ret = send(client_socket, buff, strlen(buff), 0);
+	if (ret == SOCKET_ERROR)
+		printf("Error %d", WSAGetLastError());
+};
 void bid_handler(int price, string room_id, string user_id) {};
 void buy_immediately_handler(string room_id, string user_id) {};
 
