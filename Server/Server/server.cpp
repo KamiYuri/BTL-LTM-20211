@@ -1,11 +1,13 @@
 ﻿// WSAEventSelectServer.cpp : Defines the entry point for the console application.
 //
 #include "status_code.h"
+#include "helpers.h"
 #include <stdio.h>
 #include <conio.h>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <string>
+#include "process.h"
 #pragma comment(lib, "Ws2_32.lib")
 
 #define SERVER_ADDR "127.0.0.1"
@@ -38,6 +40,41 @@ struct Room {
 	int current_price;
 	int owner = -1;
 };
+unsigned __stdcall echoThread(void* param) {
+	clientInfo client = *(clientInfo *)param;
+	cout << client.clientIP << " " << client.clientPort << endl;
+	char buff[BUFF_SIZE];
+	string dataQueue = "";
+	int ret;
+	SOCKET connectedSocket = (SOCKET)client.connSock;
+	while (1)
+	{
+		memset(&buff, 0, sizeof(buff));
+		//receive message from client
+		ret = recv(connectedSocket, buff, BUFF_SIZE, 0);
+		if (ret == SOCKET_ERROR) {
+			printf("Error %d: Cannot receive data \n", WSAGetLastError());
+			response suddenRes = logout(client.username, &client);
+			suddenRes.message = "QUIT ";
+			write(suddenRes, &client);
+
+			break;
+		}
+		else if (ret == 0) {
+			printf("Client disconnects\n");
+			break;
+		}
+		else
+		{
+			buff[ret] = 0;
+			string tmpBuff = buff;
+			dataQueue = byteStreamHandle(&tmpBuff[0], &client, dataQueue, buff);
+		}
+	}
+
+	closesocket(connectedSocket);
+	return 0;
+}
 
 User users[WSA_MAXIMUM_WAIT_EVENTS];
 Room rooms[10];
@@ -66,11 +103,15 @@ void show_rooms_handler() {};
 void join_room_handler(string room_id, string user_id) {};
 void bid_handler(int price, string room_id, string user_id) {};
 void buy_immediately_handler(string room_id, string user_id) {};
+
 void create_room_handler(
 	string item_name,
 	string item_description,
 	int starting_price,
-	int buy_immediately_price) {};
+	int buy_immediately_price) {
+	_beginthreadex(0, 0, echoThread, (void *)&client_socket, 0, 0); //start thread
+
+};
 
 
 int Receive(SOCKET, char *, int, int);
