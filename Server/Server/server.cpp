@@ -26,60 +26,24 @@ vector<User> users;
 vector<Room> rooms;
 int user_id_count = 0;
 int room_count = 0;
-unsigned __stdcall echoThread(void* param) {
-	clientInfo client = *(clientInfo *)param;
-	cout << client.clientIP << " " << client.clientPort << endl;
-	char buff[BUFF_SIZE];
-	string dataQueue = "";
-	int ret;
-	SOCKET connectedSocket = (SOCKET)client.connSock;
-	while (1)
-	{
-		memset(&buff, 0, sizeof(buff));
-		//receive message from client
-		ret = recv(connectedSocket, buff, BUFF_SIZE, 0);
-		if (ret == SOCKET_ERROR) {
-			printf("Error %d: Cannot receive data \n", WSAGetLastError());
-			response suddenRes = logout(client.username, &client);
-			suddenRes.message = "QUIT ";
-			write(suddenRes, &client);
-
-			break;
-		}
-		else if (ret == 0) {
-			printf("Client disconnects\n");
-			break;
-		}
-		else
-		{
-			buff[ret] = 0;
-			string tmpBuff = buff;
-			dataQueue = byteStreamHandle(&tmpBuff[0], &client, dataQueue, buff);
-		}
-	}
-
-	closesocket(connectedSocket);
-	return 0;
-}
-
-
 
 // change room array to vector to have unlimited size
 void filter_request(string message, SOCKET client_socket);
-void log_in_handler(string email, string password, SOCKET client_socket);
-void log_out_handler(string user_id);
-void show_rooms_handler();
-void join_room_handler(string room_id, string user_id);
-void bid_handler(int price, string room_id, string user_id);
-void buy_immediately_handler(string room_id, string user_id);
+void log_in_handler(string email, string password, /*char client_ip[INET_ADDRSTRLEN], int client_port,*/ SOCKET client_socket);
+void log_out_handler(string user_id, SOCKET client_socket);
+void show_rooms_handler(SOCKET client_socket);
+void join_room_handler(string room_id, string user_id, SOCKET client_socket);
+void bid_handler(int price, string room_id, string user_id, SOCKET client_socket);
+void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket);
 void create_room_handler(
 	string item_name,
 	string item_description,
 	int starting_price,
-	int buy_immediately_price);
+	int buy_immediately_price,
+	SOCKET client_socket);
 
-void log_in_handler(string email, string password, char client_ip[INET_ADDRSTRLEN], int client_port, SOCKET client_socket) {
-	string message = login(email, password, client_ip, client_port, client_socket, users, user_id_count);
+void log_in_handler(string email, string password, /*char client_ip[INET_ADDRSTRLEN], int client_port,*/ SOCKET client_socket) {
+	string message = login(email, password, /*client_ip, client_port,*/ client_socket, users, user_id_count);
 	strcpy_s(buff, message.length()+1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
@@ -127,7 +91,7 @@ void create_room_handler(
 	int starting_price,
 	int buy_immediately_price,
 	SOCKET client_socket) {
-	_beginthreadex(0, 0, echoThread, (void *)&client_socket, 0, 0); //start thread
+	//_beginthreadex(0, 0, echoThread, (void *)&client_socket, 0, 0); //start thread
 
 };
 
@@ -319,21 +283,20 @@ void filter_request(string message, SOCKET client_socket) {
 		int spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1);
 		string email = payload.substr(0, spliting_delimiter_index);
 		string password = payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2);
-		log_in_handler(email, password, client_socket);
+		log_in_handler(email, password, /*client_ip, client_port,*/ client_socket);
 	}
 	else if (method == "LOGOUT") {
 		string user_id = payload;
-		log_out_handler(user_id);
-
+		log_out_handler(user_id, client_socket);
 	}
 	else if (method == "SHOW__") {
-		show_rooms_handler();
+		show_rooms_handler(client_socket);
 	}
 	else if (method == "JOIN__") {
 		int spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1);
 		string user_id = payload.substr(0, spliting_delimiter_index);
 		string room_id = payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2);
-		join_room_handler(room_id, user_id);
+		join_room_handler(room_id, user_id, client_socket);
 	}
 	else if (method == "BID___") {
 		int spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1);
@@ -344,13 +307,13 @@ void filter_request(string message, SOCKET client_socket) {
 		string user_id = payload.substr(pre_delimiter_index + 2, spliting_delimiter_index - pre_delimiter_index - 2);
 		string room_id = payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2);
 
-		bid_handler(price, room_id, user_id);
+		bid_handler(price, room_id, user_id, client_socket);
 	}
 	else if (method == "BUYNOW") {
 		int spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1);
 		string user_id = payload.substr(0, spliting_delimiter_index);
 		string room_id = payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2);
-		buy_immediately_handler(room_id, user_id);
+		buy_immediately_handler(room_id, user_id, client_socket);
 	}
 	else if (method == "CREATE") {
 		int spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1);
@@ -365,3 +328,4 @@ void filter_request(string message, SOCKET client_socket) {
 		int starting_price = stoi(payload.substr(pre_delimiter_index + 2, spliting_delimiter_index - pre_delimiter_index - 2));
 		int buy_immediately_price = stoi(payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2));
 	}
+}

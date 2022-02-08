@@ -19,28 +19,8 @@
 #include "status_code.h"
 
 using namespace std;
-struct User {
-	string user_id;
-	string username;
-	string password;
-	SOCKET socket;
-	char client_ip[INET_ADDRSTRLEN];
-	int client_port;
-};
 
-struct Room {
-	vector<string> client_list;   //array of strings of user_id
-	string room_id;
-	string item_name;
-	string item_description;
-	int starting_price;
-	int buy_immediately_price;
-	int current_price;
-	string current_highest_user;
-	string owner = "-1"; //default = "-1", if item was sold then = user_id
-};
-
-string login(string email, string password, char client_ip[INET_ADDRSTRLEN], int client_port, SOCKET client_socket, vector<User> users, int id_count) {
+string login(string email, string password, /*char client_ip[INET_ADDRSTRLEN], int client_port,*/ SOCKET client_socket, vector<User> users, int id_count) {
 	ifstream fileAcc;
 	fileAcc.open("account.txt");
 	if (fileAcc.is_open()) {
@@ -53,17 +33,17 @@ string login(string email, string password, char client_ip[INET_ADDRSTRLEN], int
 				//them cac thong tin vao 1 tmp_user roi them vao vector
 				id_count++;
 				User tmp_user;
-				tmp_user.user_id = id_count;
+				tmp_user.user_id = to_string(id_count);
 				tmp_user.username = email;
 				tmp_user.password = password;
 				tmp_user.socket = client_socket;
-				strcpy(tmp_user.client_ip, client_ip);
-				tmp_user.client_port = client_port;
+				//strcpy_s(tmp_user.client_ip, client_ip);
+				//tmp_user.client_port = client_port;
 				users.push_back(tmp_user);
-				return SUCCESS_LOGIN;
+				return SUCCESS_LOGIN + tmp_user.user_id;
 			}
-			else return FAILED_LOGIN;
 		}
+		return FAILED_LOGIN;
 	}
 }
 

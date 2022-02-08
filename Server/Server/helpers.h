@@ -26,7 +26,7 @@ struct Room {
 	string current_highest_user;
 	string owner = "-1"; //default = "-1", if item was sold then = user_id
 };
-string login(string email, string password, char client_ip[INET_ADDRSTRLEN], int client_port, SOCKET client_socket, vector<User> users, int id_count);
+string login(string email, string password, /*char client_ip[INET_ADDRSTRLEN], int client_port,*/ SOCKET client_socket, vector<User> users, int id_count);
 string logout(string user_id, vector<User> users);
 string show_room(vector<Room> rooms);
 string join_room(string room_id, string user_id, vector<Room> rooms);
