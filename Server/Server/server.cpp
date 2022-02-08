@@ -22,26 +22,10 @@ using namespace std;
 
 char sendBuff[BUFF_SIZE], recvBuff[BUFF_SIZE], buff[BUFF_SIZE];
 int ret;
-// data structure declaration
-struct User {
-	string user_id;
-	string username;
-	string password;
-	SOCKET socket;
-	char client_ip[INET_ADDRSTRLEN];
-	int client_port;
-};
-
-struct Room {
-	string client[WSA_MAXIMUM_WAIT_EVENTS];
-	string room_id;
-	string item_name;
-	string item_description;
-	int starting_price;
-	int buy_immediately_price;
-	int current_price;
-	int owner = -1;
-};
+vector<User> users;
+vector<Room> rooms;
+int user_id_count = 0;
+int room_count = 0;
 unsigned __stdcall echoThread(void* param) {
 	clientInfo client = *(clientInfo *)param;
 	cout << client.clientIP << " " << client.clientPort << endl;
@@ -78,10 +62,7 @@ unsigned __stdcall echoThread(void* param) {
 	return 0;
 }
 
-vector<User> *users = new vector<User>();
-vector<Room> *rooms = new vector<Room>();
-int user_id_count = 0;
-int room_count = 0;
+
 
 // change room array to vector to have unlimited size
 void filter_request(string message, SOCKET client_socket);
@@ -98,7 +79,7 @@ void create_room_handler(
 	int buy_immediately_price);
 
 void log_in_handler(string email, string password, char client_ip[INET_ADDRSTRLEN], int client_port, SOCKET client_socket) {
-	string message = login(email, password, client_ip, client_port, client_socket, users, &user_id_count);
+	string message = login(email, password, client_ip, client_port, client_socket, users, user_id_count);
 	strcpy_s(buff, message.length()+1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
@@ -111,7 +92,13 @@ void log_out_handler(string user_id, SOCKET client_socket) {
 	if (ret == SOCKET_ERROR)
 		printf("Error %d", WSAGetLastError());
 };
-void show_rooms_handler() {};
+void show_rooms_handler(SOCKET client_socket) {
+	string message = show_room(rooms);
+	strcpy_s(buff, message.length() + 1, &message[0]);
+	ret = send(client_socket, buff, strlen(buff), 0);
+	if (ret == SOCKET_ERROR)
+		printf("Error %d", WSAGetLastError());
+};
 void join_room_handler(string room_id, string user_id, SOCKET client_socket) {
 	string message = join_room(room_id, user_id, rooms);
 	strcpy_s(buff, message.length() + 1, &message[0]);
@@ -119,14 +106,27 @@ void join_room_handler(string room_id, string user_id, SOCKET client_socket) {
 	if (ret == SOCKET_ERROR)
 		printf("Error %d", WSAGetLastError());
 };
-void bid_handler(int price, string room_id, string user_id) {};
-void buy_immediately_handler(string room_id, string user_id) {};
+void bid_handler(int price, string room_id, string user_id, SOCKET client_socket) {
+	string message = bid(price, room_id, user_id, rooms);
+	strcpy_s(buff, message.length() + 1, &message[0]);
+	ret = send(client_socket, buff, strlen(buff), 0);
+	if (ret == SOCKET_ERROR)
+		printf("Error %d", WSAGetLastError());
+};
+void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket) {
+	string message = buy_immediately(room_id, user_id, rooms);
+	strcpy_s(buff, message.length() + 1, &message[0]);
+	ret = send(client_socket, buff, strlen(buff), 0);
+	if (ret == SOCKET_ERROR)
+		printf("Error %d", WSAGetLastError());
+};
 
 void create_room_handler(
 	string item_name,
 	string item_description,
 	int starting_price,
-	int buy_immediately_price) {
+	int buy_immediately_price,
+	SOCKET client_socket) {
 	_beginthreadex(0, 0, echoThread, (void *)&client_socket, 0, 0); //start thread
 
 };

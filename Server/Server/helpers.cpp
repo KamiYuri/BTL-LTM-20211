@@ -39,9 +39,8 @@ struct Room {
 	string current_highest_user;
 	string owner = "-1"; //default = "-1", if item was sold then = user_id
 };
-int id_count = 0;
 
-string login(string email, string password, char client_ip[INET_ADDRSTRLEN], int client_port, SOCKET client_socket, vector<User> *users , int *user_id_count) {
+string login(string email, string password, char client_ip[INET_ADDRSTRLEN], int client_port, SOCKET client_socket, vector<User> users, int id_count) {
 	ifstream fileAcc;
 	fileAcc.open("account.txt");
 	if (fileAcc.is_open()) {
@@ -52,43 +51,33 @@ string login(string email, string password, char client_ip[INET_ADDRSTRLEN], int
 			string pass = line.substr(space + 1);
 			if (email == account && password == pass) {
 				//them cac thong tin vao 1 tmp_user roi them vao vector
-				*user_id_count++;
+				id_count++;
 				User tmp_user;
-				tmp_user.user_id = *user_id_count;
+				tmp_user.user_id = id_count;
 				tmp_user.username = email;
 				tmp_user.password = password;
 				tmp_user.socket = client_socket;
 				strcpy(tmp_user.client_ip, client_ip);
 				tmp_user.client_port = client_port;
-				(*users).push_back(tmp_user);
+				users.push_back(tmp_user);
 				return SUCCESS_LOGIN;
 			}
 			else return FAILED_LOGIN;
 		}
 	}
 }
-/*
-struct find_user
-{
-	string user_id;
-	find_user(string user_id) : user_id(user_id) {}
-	bool operator () (const User& user) const
-	{
-		return user.user_id == user_id;
-	}
-};
-*/
-string logout(string user_id, vector<User> *users){
-	for (int i = 0; i < (*users).size(); i++) {
-		if ((*users)[i].user_id == user_id) {
-			(*users).erase((*users).begin()+i-1);
+
+string logout(string user_id, vector<User> users){
+	for (int i = 0; i < users.size(); i++) {
+		if (users[i].user_id == user_id) {
+			users.erase(users.begin()+i-1);
 			return SUCCESS_LOGOUT;
 		}
 	}
 	return FAILED_LOGOUT;
 }
 
-string show_Room(vector<Room> &rooms) {
+string show_room(vector<Room> rooms) {
 	string message;
 	for (int i = 0;i<rooms.size();i++) {
 		message = SUCCESS_SHOW_ROOM + rooms[i].room_id + SPLITING_DELIMITER_2 + rooms[i].item_name + SPLITING_DELIMITER_2 + rooms[i].item_description + SPLITING_DELIMITER_1;
@@ -97,18 +86,17 @@ string show_Room(vector<Room> &rooms) {
 	return message;
 }
 
-string join_Room(string room_id, string user_id, vector<Room> *rooms) {
-	for (int i = 0;i<(*rooms).size();i++) {
-		if (room_id == (*rooms)[i].room_id) {
-			(*rooms)[i].client_list.push_back(user_id);
+string join_room(string room_id, string user_id, vector<Room> rooms) {
+	for (int i = 0;i<rooms.size();i++) {
+		if (room_id == rooms[i].room_id) {
+			rooms[i].client_list.push_back(user_id);
 			return SUCCESS_JOIN_ROOM;
 		}
 	}
 	return ROOM_NOT_FOUND;
-
 }
 
-string bid(int price, string room_id, string user_id, vector<Room> &rooms) {
+string bid(int price, string room_id, string user_id, vector<Room> rooms) {
 	for (int i = 0;i<rooms.size();i++) {
 		if (rooms[i].room_id == room_id) {
 			if (price > rooms[i].current_price) {
@@ -119,10 +107,10 @@ string bid(int price, string room_id, string user_id, vector<Room> &rooms) {
 			else return LOWER_THAN_CURRENT_PRICE;
 		}
 	}
-	return "not available yet";
+	return "Wrong ID";
 }
 
-string buy_immediately(string room_id, string user_id, vector<Room> &rooms) {
+string buy_immediately(string room_id, string user_id, vector<Room> rooms) {
 	for (int i = 0;i<rooms.size();i++) {
 		if (rooms[i].room_id == room_id) {
 			if (rooms[i].owner == "-1") {
@@ -132,20 +120,20 @@ string buy_immediately(string room_id, string user_id, vector<Room> &rooms) {
 			else return ALREADY_SOLD;
 		}
 	}
-	return "not available yet";
+	return "Wrong ID";
 }
 
-string create_Room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> &rooms) {
-	Room tmp_Room;
-	tmp_Room.item_name = item_name;
-	tmp_Room.item_description = item_description;
-	tmp_Room.starting_price = starting_price;
-	tmp_Room.buy_immediately_price = buy_immediately_price;
-	if (tmp_Room.starting_price > 0 && tmp_Room.buy_immediately_price > tmp_Room.starting_price) {
+string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> rooms, int id_count) {
+	Room tmp_room;
+	tmp_room.item_name = item_name;
+	tmp_room.item_description = item_description;
+	tmp_room.starting_price = starting_price;
+	tmp_room.buy_immediately_price = buy_immediately_price;
+	if (tmp_room.starting_price > 0 && tmp_room.buy_immediately_price > tmp_room.starting_price) {
 		id_count++;
-		tmp_Room.room_id = id_count;
-		rooms.push_back(tmp_Room);
-		return SUCCESS_CREATE_ROOM;
+		tmp_room.room_id = to_string(id_count);
+		rooms.push_back(tmp_room);
+		return SUCCESS_CREATE_ROOM + tmp_room.room_id;
 	}
 	else return INVALID_INFORMATION;
 }
