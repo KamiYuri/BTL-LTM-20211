@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <MenuBar layoutX="-8.0" prefHeight="25.0" prefWidth="1288.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="Tuỳ chọn">
+            <items>
+              <MenuItem mnemonicParsing="false" onAction="#logoutAction" text="Đăng xuất" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Edit">
+            <items>
+              <MenuItem mnemonicParsing="false" onAction="#createRoomAction" text="Create new room" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <TreeView fx:id="roomTreeView" layoutY="25.0" prefHeight="775.0" prefWidth="300.0" />
+      <AnchorPane layoutX="300.0" layoutY="25.0" prefHeight="387.5" prefWidth="980.0" style="-fx-border-style: solid; -fx-border-width: 0 0 2 2;" />
+      <AnchorPane layoutX="300.0" layoutY="412.5" prefHeight="387.5" prefWidth="980.0" style="-fx-border-style: solid; -fx-border-width: 0 0 0 2;" />
+   </children>
+</AnchorPane>

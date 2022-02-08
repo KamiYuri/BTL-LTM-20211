@@ -7,7 +7,6 @@ module Client {
 
     opens com.kamiyuri;
     opens com.kamiyuri.view;
-    opens com.kamiyuri.model;
     opens com.kamiyuri.controller;
 
 }
