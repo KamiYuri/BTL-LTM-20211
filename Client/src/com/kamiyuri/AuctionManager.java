@@ -1,5 +1,8 @@
 package com.kamiyuri;
 
+import com.kamiyuri.model.RoomTreeItem;
+import javafx.scene.control.TreeItem;
+
 import java.io.IOException;
 
 public class AuctionManager {
@@ -7,5 +10,11 @@ public class AuctionManager {
 
     public AuctionManager() throws IOException {
         this.tcp = new TCP();
+    }
+
+    private RoomTreeItem<String> root = new RoomTreeItem<>("");
+
+    public TreeItem<String> getRoomsRoot() {
+        return this.root;
     }
 }
