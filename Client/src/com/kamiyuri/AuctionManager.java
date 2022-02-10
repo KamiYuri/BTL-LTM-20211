@@ -17,4 +17,12 @@ public class AuctionManager {
     public TreeItem<String> getRoomsRoot() {
         return this.root;
     }
+
+    public void getRooms(TreeItem<String> room) {
+
+    }
+
+    public void getUserRooms(TreeItem<String> userRoom) {
+
+    }
 }
