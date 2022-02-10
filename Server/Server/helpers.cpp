@@ -139,16 +139,3 @@ string create_room(string item_name, string item_description, int starting_price
 	else return INVALID_INFORMATION;
 }
 
-int main() {
-	string email = "vvt";
-	string password = "123";
-	string item_name = "bruh";
-	string item_description = "damn";
-	int starting_price = 69;
-	int buy_immediately_price = 96;
-	string room_id = "0000";
-	string user_id = "0000";
-	cout << create_room(item_name, item_description, starting_price, buy_immediately_price, rooms) << endl
-		<< show_room(rooms) << endl
-		<< bid(80, room_id, user_id, rooms);
-}

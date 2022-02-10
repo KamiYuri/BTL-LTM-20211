@@ -2,9 +2,11 @@
 //
 #include "status_code.h"
 #include "helpers.h"
+#include <iostream>
 #include <stdio.h>
 #include <conio.h>
 #include <WinSock2.h>
+#include <Windows.h>
 #include <WS2tcpip.h>
 #include <string>
 #include "process.h"
@@ -40,39 +42,9 @@ struct Room {
 	int current_price;
 	int owner = -1;
 };
-unsigned __stdcall echoThread(void* param) {
-	clientInfo client = *(clientInfo *)param;
-	cout << client.clientIP << " " << client.clientPort << endl;
-	char buff[BUFF_SIZE];
-	string dataQueue = "";
-	int ret;
-	SOCKET connectedSocket = (SOCKET)client.connSock;
-	while (1)
-	{
-		memset(&buff, 0, sizeof(buff));
-		//receive message from client
-		ret = recv(connectedSocket, buff, BUFF_SIZE, 0);
-		if (ret == SOCKET_ERROR) {
-			printf("Error %d: Cannot receive data \n", WSAGetLastError());
-			response suddenRes = logout(client.username, &client);
-			suddenRes.message = "QUIT ";
-			write(suddenRes, &client);
-
-			break;
-		}
-		else if (ret == 0) {
-			printf("Client disconnects\n");
-			break;
-		}
-		else
-		{
-			buff[ret] = 0;
-			string tmpBuff = buff;
-			dataQueue = byteStreamHandle(&tmpBuff[0], &client, dataQueue, buff);
-		}
-	}
-
-	closesocket(connectedSocket);
+unsigned __stdcall echoThread(void *param) {
+	string room_id = (char *)param;
+	
 	return 0;
 }
 
@@ -109,7 +81,12 @@ void create_room_handler(
 	string item_description,
 	int starting_price,
 	int buy_immediately_price) {
-	_beginthreadex(0, 0, echoThread, (void *)&client_socket, 0, 0); //start thread
+
+	string room_id = "1";
+	char* room_id_test = (char*)malloc(sizeof(char)*1000);
+	strcpy_s(room_id_test, room_id.length() + 1, &room_id[0]);
+
+	 _beginthreadex(0, 0, echoThread, (void *)room_id_test, 0, 0); //start thread
 
 };
 
@@ -346,4 +323,6 @@ void filter_request(string message, SOCKET client_socket) {
 		spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1, pre_delimiter_index + 2);
 		int starting_price = stoi(payload.substr(pre_delimiter_index + 2, spliting_delimiter_index - pre_delimiter_index - 2));
 		int buy_immediately_price = stoi(payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2));
+		create_room_handler(item_name, item_description, starting_price, buy_immediately_price);
 	}
+}
