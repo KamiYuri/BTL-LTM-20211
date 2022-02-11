@@ -25,27 +25,32 @@ using namespace std;
 char sendBuff[BUFF_SIZE], recvBuff[BUFF_SIZE], buff[BUFF_SIZE];
 int ret;
 // data structure declaration
-struct User {
-	string user_id;
-	string username;
-	string password;
-	SOCKET socket;
-	char client_ip[INET_ADDRSTRLEN];
-	int client_port;
-};
-
-struct Room {
-	string client[WSA_MAXIMUM_WAIT_EVENTS];
-	string room_id;
-	string item_name;
-	string item_description;
-	int starting_price;
-	int buy_immediately_price;
-	int current_price;
-	int owner = -1;
-};
 unsigned __stdcall echoThread(void *param) {
 	string room_id = (char *)param;
+	cout << "Room created with id:"<<room_id << endl;
+
+	for (int i = 0;i < rooms.size();i++) {
+		if (rooms[i].room_id == room_id)
+		{
+			vector<string> participants = rooms[i].client_list;
+			for (int j = 0;j < participants.size();j++) {
+				//ret = send(, buff, strlen(buff), 0);
+				int ret =1 ; // temp code line, remove later
+				if (ret == SOCKET_ERROR)
+				{
+					printf("Error %d: Cannot send data.\n", WSAGetLastError());
+					break;
+				}
+			}
+		}
+	}
+	/*
+	while (1) {
+		int test_time = 5000;
+		Sleep(test_time);
+
+
+	} */
 	
 	return 0;
 }
@@ -53,7 +58,7 @@ unsigned __stdcall echoThread(void *param) {
 vector<User> users;
 vector<Room> rooms;
 int user_id_count = 0;
-int room_count = 0;
+int room_id_count = 0;
 
 // change room array to vector to have unlimited size
 void filter_request(string message, SOCKET client_socket);
@@ -70,8 +75,8 @@ void create_room_handler(
 	int buy_immediately_price,
 	SOCKET client_socket);
 
-void log_in_handler(string email, string password, /*char client_ip[INET_ADDRSTRLEN], int client_port,*/ SOCKET client_socket) {
-	string message = login(email, password, /*client_ip, client_port,*/ client_socket, users, user_id_count);
+void log_in_handler(string email, string password, SOCKET client_socket) {
+	string message = login(email, password, client_socket, users, user_id_count);
 	strcpy_s(buff, message.length()+1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
@@ -120,11 +125,19 @@ void create_room_handler(
 	int buy_immediately_price,
 	SOCKET client_socket) {
 
-	string room_id = "1";
-	char* room_id_test = (char*)malloc(sizeof(char)*1000);
-	strcpy_s(room_id_test, room_id.length() + 1, &room_id[0]);
+	string response = create_room(item_name, item_description, starting_price, buy_immediately_price, rooms, room_id_count);
+	if (response.substr(0, 2) == SUCCESS_CREATE_ROOM)
+	{
+		string room_id = response.substr(2, room_id.length() - 2);
+		char* room_id_in_char = (char*)malloc(sizeof(char) * 1000);
+		strcpy_s(room_id_in_char, room_id.length() + 1, &room_id[0]);
 
-	 _beginthreadex(0, 0, echoThread, (void *)room_id_test, 0, 0); //start thread
+		_beginthreadex(0, 0, echoThread, (void *)room_id_in_char, 0, 0); //start thread
+	}
+	else
+	{
+
+	}
 
 };
 
@@ -360,6 +373,6 @@ void filter_request(string message, SOCKET client_socket) {
 		spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1, pre_delimiter_index + 2);
 		int starting_price = stoi(payload.substr(pre_delimiter_index + 2, spliting_delimiter_index - pre_delimiter_index - 2));
 		int buy_immediately_price = stoi(payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2));
-		create_room_handler(item_name, item_description, starting_price, buy_immediately_price);
+		create_room_handler(item_name, item_description, starting_price, buy_immediately_price, client_socket);
 	}
 }
