@@ -24,41 +24,40 @@ using namespace std;
 
 char sendBuff[BUFF_SIZE], recvBuff[BUFF_SIZE], buff[BUFF_SIZE];
 int ret;
-// data structure declaration
-unsigned __stdcall echoThread(void *param) {
-	string room_id = (char *)param;
-	cout << "Room created with id:"<<room_id << endl;
-
-	for (int i = 0;i < rooms.size();i++) {
-		if (rooms[i].room_id == room_id)
-		{
-			vector<User> participants = rooms[i].client_list;
-			for (int j = 0;j < participants.size();j++) {
-				//ret = send(, buff, strlen(buff), 0);
-				int ret =1 ; // temp code line, remove later
-				if (ret == SOCKET_ERROR)
-				{
-					printf("Error %d: Cannot send data.\n", WSAGetLastError());
-					break;
-				}
-			}
-		}
-	}
-	/*
-	while (1) {
-		int test_time = 5000;
-		Sleep(test_time);
-
-
-	} */
-	
-	return 0;
-}
 
 vector<User> users;
 vector<Room> rooms;
 int user_id_count = 0;
 int room_id_count = 0;
+// data structure declaration
+unsigned __stdcall echoThread(void *param) {
+	string room_id = (char *)param;
+	cout << "Room created with id:"<<room_id << endl;
+
+	while (1) {
+		int test_time = 5000;
+		Sleep(test_time);
+		for (int i = 0;i < rooms.size();i++) {
+			if (rooms[i].room_id == room_id)
+			{
+				vector<User> participants = rooms[i].client_list;
+				for (int j = 0;j < participants.size();j++) {
+					ret = send(participants[j].socket, buff, strlen(buff), 0);
+					if (ret == SOCKET_ERROR)
+					{
+						printf("Error %d: Cannot send data.\n", WSAGetLastError());
+						break;
+					}
+				}
+			}
+		}
+
+
+	}
+	
+	return 0;
+}
+
 
 // change room array to vector to have unlimited size
 void filter_request(string message, SOCKET client_socket);
@@ -125,7 +124,7 @@ void create_room_handler(
 	int buy_immediately_price,
 	SOCKET client_socket) {
 
-	string response = create_room(item_name, item_description, starting_price, buy_immediately_price, rooms, room_id_count);
+	string response = create_room(item_name, item_description, starting_price, buy_immediately_price, &rooms, room_id_count);
 	if (response.substr(0, 2) == SUCCESS_CREATE_ROOM)
 	{
 		string room_id = response.substr(2, room_id.length() - 2);
@@ -329,7 +328,7 @@ void filter_request(string message, SOCKET client_socket) {
 		int spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1);
 		string email = payload.substr(0, spliting_delimiter_index);
 		string password = payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2);
-		log_in_handler(email, password, /*client_ip, client_port,*/ client_socket);
+		log_in_handler(email, password, client_socket);
 	}
 	else if (method == "LOGOUT") {
 		string user_id = payload;

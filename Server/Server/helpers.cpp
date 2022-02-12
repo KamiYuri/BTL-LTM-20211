@@ -105,7 +105,7 @@ string buy_immediately(string room_id, string user_id, vector<Room> rooms) {
 	return "Wrong ID";
 }
 
-string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> rooms, int id_count) {
+string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int id_count) {
 	Room tmp_room;
 	tmp_room.item_name = item_name;
 	tmp_room.item_description = item_description;
@@ -114,7 +114,7 @@ string create_room(string item_name, string item_description, int starting_price
 	if (tmp_room.starting_price > 0 && tmp_room.buy_immediately_price > tmp_room.starting_price) {
 		id_count++;
 		tmp_room.room_id = to_string(id_count);
-		rooms.push_back(tmp_room);
+		(*rooms).push_back(tmp_room);
 		return SUCCESS_CREATE_ROOM + tmp_room.room_id;
 	}
 	else return INVALID_INFORMATION;
