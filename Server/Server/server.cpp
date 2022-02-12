@@ -32,7 +32,7 @@ unsigned __stdcall echoThread(void *param) {
 	for (int i = 0;i < rooms.size();i++) {
 		if (rooms[i].room_id == room_id)
 		{
-			vector<string> participants = rooms[i].client_list;
+			vector<User> participants = rooms[i].client_list;
 			for (int j = 0;j < participants.size();j++) {
 				//ret = send(, buff, strlen(buff), 0);
 				int ret =1 ; // temp code line, remove later
@@ -97,7 +97,7 @@ void show_rooms_handler(SOCKET client_socket) {
 		printf("Error %d", WSAGetLastError());
 };
 void join_room_handler(string room_id, string user_id, SOCKET client_socket) {
-	string message = join_room(room_id, user_id, rooms);
+	string message = join_room(room_id, user_id, rooms, users);
 	strcpy_s(buff, message.length() + 1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)

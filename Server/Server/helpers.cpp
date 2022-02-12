@@ -34,8 +34,8 @@ string login(string email, string password, /*char client_ip[INET_ADDRSTRLEN], i
 				id_count++;
 				User tmp_user;
 				tmp_user.user_id = to_string(id_count);
-				tmp_user.username = email;
-				tmp_user.password = password;
+				//tmp_user.username = email;
+				//tmp_user.password = password;
 				tmp_user.socket = client_socket;
 				//strcpy_s(tmp_user.client_ip, client_ip);
 				//tmp_user.client_port = client_port;
@@ -66,11 +66,13 @@ string show_room(vector<Room> rooms) {
 	return message;
 }
 
-string join_room(string room_id, string user_id, vector<Room> rooms) {
+string join_room(string room_id, string user_id, vector<Room> rooms, vector<User> users) {
 	for (int i = 0;i<rooms.size();i++) {
 		if (room_id == rooms[i].room_id) {
-			rooms[i].client_list.push_back(user_id);
-			return SUCCESS_JOIN_ROOM;
+			for (int j = 0; j < users.size(); j++) {
+				rooms[i].client_list.push_back(users[j]);
+				return SUCCESS_JOIN_ROOM;
+			}
 		}
 	}
 	return ROOM_NOT_FOUND;
