@@ -1,4 +1,4 @@
-package com.kamiyuri;
+package com.kamiyuri.TCP;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,9 +14,14 @@ public class TCP {
     private PrintWriter out;
     private BufferedReader in;
 
-    TCP() throws IOException {
+    public TCP() throws IOException {
         connSocket = new Socket(serverIp, serverPort);
         out = new PrintWriter(connSocket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(connSocket.getInputStream()));
+    }
+
+    public String exchangeMessage(String request) throws IOException {
+        out.println(request);
+        return in.readLine();
     }
 }

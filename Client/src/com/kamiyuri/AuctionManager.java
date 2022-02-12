@@ -1,5 +1,6 @@
 package com.kamiyuri;
 
+import com.kamiyuri.TCP.TCP;
 import com.kamiyuri.model.RoomTreeItem;
 import javafx.scene.control.TreeItem;
 
@@ -24,5 +25,9 @@ public class AuctionManager {
 
     public void getUserRooms(TreeItem<String> userRoom) {
 
+    }
+
+    public String exchangeMessage(String request) throws IOException {
+        return tcp.exchangeMessage(request);
     }
 }
