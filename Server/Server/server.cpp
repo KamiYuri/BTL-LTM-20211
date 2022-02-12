@@ -76,42 +76,42 @@ void create_room_handler(
 	SOCKET client_socket);
 
 void log_in_handler(string email, string password, SOCKET client_socket) {
-	string message = login(email, password, client_socket, users, user_id_count);
+	string message = login(email, password, client_socket, &users, user_id_count);
 	strcpy_s(buff, message.length()+1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
 		printf("Error %d", WSAGetLastError());
 };
 void log_out_handler(string user_id, SOCKET client_socket) {
-	string message = logout(user_id, users);
+	string message = logout(user_id, &users);
 	strcpy_s(buff, message.length() + 1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
 		printf("Error %d", WSAGetLastError());
 };
 void show_rooms_handler(SOCKET client_socket) {
-	string message = show_room(rooms);
+	string message = show_room(&rooms);
 	strcpy_s(buff, message.length() + 1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
 		printf("Error %d", WSAGetLastError());
 };
 void join_room_handler(string room_id, string user_id, SOCKET client_socket) {
-	string message = join_room(room_id, user_id, rooms, users);
+	string message = join_room(room_id, user_id, &rooms, &users);
 	strcpy_s(buff, message.length() + 1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
 		printf("Error %d", WSAGetLastError());
 };
 void bid_handler(int price, string room_id, string user_id, SOCKET client_socket) {
-	string message = bid(price, room_id, user_id, rooms);
+	string message = bid(price, room_id, user_id, &rooms);
 	strcpy_s(buff, message.length() + 1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
 		printf("Error %d", WSAGetLastError());
 };
 void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket) {
-	string message = buy_immediately(room_id, user_id, rooms);
+	string message = buy_immediately(room_id, user_id, &rooms);
 	strcpy_s(buff, message.length() + 1, &message[0]);
 	ret = send(client_socket, buff, strlen(buff), 0);
 	if (ret == SOCKET_ERROR)
@@ -125,7 +125,7 @@ void create_room_handler(
 	int buy_immediately_price,
 	SOCKET client_socket) {
 
-	string response = create_room(item_name, item_description, starting_price, buy_immediately_price, rooms, room_id_count);
+	string response = create_room(item_name, item_description, starting_price, buy_immediately_price, &rooms, room_id_count);
 	if (response.substr(0, 2) == SUCCESS_CREATE_ROOM)
 	{
 		string room_id = response.substr(2, room_id.length() - 2);
