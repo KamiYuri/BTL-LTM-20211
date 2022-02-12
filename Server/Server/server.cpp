@@ -33,15 +33,18 @@ int room_id_count = 0;
 unsigned __stdcall echoThread(void *param) {
 	string room_id = (char *)param;
 	cout << "Room created with id:"<<room_id << endl;
-
 	while (1) {
-		int test_time = 5000;
+		int test_time = 60000;
 		Sleep(test_time);
 		for (int i = 0;i < rooms.size();i++) {
 			if (rooms[i].room_id == room_id)
 			{
 				vector<User> participants = rooms[i].client_list;
 				for (int j = 0;j < participants.size();j++) {
+					string message = "user id: " + rooms[i].current_highest_user + 
+						"+ current price: " + to_string(rooms[i].current_price) + 
+						"+ participants number:" + to_string(participants.size());
+					strcpy_s(buff, message.length() + 1, &message[0]);
 					ret = send(participants[j].socket, buff, strlen(buff), 0);
 					if (ret == SOCKET_ERROR)
 					{
@@ -61,7 +64,7 @@ unsigned __stdcall echoThread(void *param) {
 
 // change room array to vector to have unlimited size
 void filter_request(string message, SOCKET client_socket);
-void log_in_handler(string email, string password, /*char client_ip[INET_ADDRSTRLEN], int client_port,*/ SOCKET client_socket);
+void log_in_handler(string email, string password, SOCKET client_socket);
 void log_out_handler(string user_id, SOCKET client_socket);
 void show_rooms_handler(SOCKET client_socket);
 void join_room_handler(string room_id, string user_id, SOCKET client_socket);
