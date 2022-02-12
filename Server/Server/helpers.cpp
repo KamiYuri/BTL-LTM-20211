@@ -20,7 +20,7 @@
 
 using namespace std;
 
-string login(string email, string password, /*char client_ip[INET_ADDRSTRLEN], int client_port,*/ SOCKET client_socket, vector<User> users, int id_count) {
+string login(string email, string password, /*char client_ip[INET_ADDRSTRLEN], int client_port,*/ SOCKET client_socket, vector<User> *users, int id_count) {
 	ifstream fileAcc;
 	fileAcc.open("account.txt");
 	if (fileAcc.is_open()) {
@@ -39,7 +39,7 @@ string login(string email, string password, /*char client_ip[INET_ADDRSTRLEN], i
 				tmp_user.socket = client_socket;
 				//strcpy_s(tmp_user.client_ip, client_ip);
 				//tmp_user.client_port = client_port;
-				users.push_back(tmp_user);
+				(*users).push_back(tmp_user);
 				return SUCCESS_LOGIN + tmp_user.user_id;
 			}
 		}
@@ -47,30 +47,30 @@ string login(string email, string password, /*char client_ip[INET_ADDRSTRLEN], i
 	}
 }
 
-string logout(string user_id, vector<User> users){
-	for (int i = 0; i < users.size(); i++) {
-		if (users[i].user_id == user_id) {
-			users.erase(users.begin()+i-1);
+string logout(string user_id, vector<User> *users){
+	for (int i = 0; i < (*users).size(); i++) {
+		if ((*users)[i].user_id == user_id) {
+			(*users).erase((*users).begin()+i-1);
 			return SUCCESS_LOGOUT;
 		}
 	}
 	return FAILED_LOGOUT;
 }
 
-string show_room(vector<Room> rooms) {
+string show_room(vector<Room> *rooms) {
 	string message;
-	for (int i = 0;i<rooms.size();i++) {
-		message = SUCCESS_SHOW_ROOM + rooms[i].room_id + SPLITING_DELIMITER_2 + rooms[i].item_name + SPLITING_DELIMITER_2 + rooms[i].item_description + SPLITING_DELIMITER_1;
+	for (int i = 0;i<(*rooms).size();i++) {
+		message = SUCCESS_SHOW_ROOM + (*rooms)[i].room_id + SPLITING_DELIMITER_2 + (*rooms)[i].item_name + SPLITING_DELIMITER_2 + (*rooms)[i].item_description + SPLITING_DELIMITER_1;
 	}
 	message += ENDING_DELIMITER;
 	return message;
 }
 
-string join_room(string room_id, string user_id, vector<Room> rooms, vector<User> users) {
-	for (int i = 0;i<rooms.size();i++) {
-		if (room_id == rooms[i].room_id) {
-			for (int j = 0; j < users.size(); j++) {
-				rooms[i].client_list.push_back(users[j]);
+string join_room(string room_id, string user_id, vector<Room> *rooms, vector<User> *users) {
+	for (int i = 0;i<(*rooms).size();i++) {
+		if (room_id == (*rooms)[i].room_id) {
+			for (int j = 0; j < (*users).size(); j++) {
+				(*rooms)[i].client_list.push_back((*users)[j]);
 				return SUCCESS_JOIN_ROOM;
 			}
 		}
@@ -78,12 +78,12 @@ string join_room(string room_id, string user_id, vector<Room> rooms, vector<User
 	return ROOM_NOT_FOUND;
 }
 
-string bid(int price, string room_id, string user_id, vector<Room> rooms) {
-	for (int i = 0;i<rooms.size();i++) {
-		if (rooms[i].room_id == room_id) {
-			if (price > rooms[i].current_price) {
-				rooms[i].current_price = price;
-				rooms[i].current_highest_user = user_id;
+string bid(int price, string room_id, string user_id, vector<Room> *rooms) {
+	for (int i = 0;i<(*rooms).size();i++) {
+		if ((*rooms)[i].room_id == room_id) {
+			if (price >(*rooms)[i].current_price) {
+				(*rooms)[i].current_price = price;
+				(*rooms)[i].current_highest_user = user_id;
 				return SUCCESS_BID;
 			}
 			else return LOWER_THAN_CURRENT_PRICE;
@@ -92,11 +92,11 @@ string bid(int price, string room_id, string user_id, vector<Room> rooms) {
 	return "Wrong ID";
 }
 
-string buy_immediately(string room_id, string user_id, vector<Room> rooms) {
-	for (int i = 0;i<rooms.size();i++) {
-		if (rooms[i].room_id == room_id) {
-			if (rooms[i].owner == "-1") {
-				rooms[i].owner == user_id;
+string buy_immediately(string room_id, string user_id, vector<Room> *rooms) {
+	for (int i = 0;i<(*rooms).size();i++) {
+		if ((*rooms)[i].room_id == room_id) {
+			if ((*rooms)[i].owner == "-1") {
+				(*rooms)[i].owner == user_id;
 				return SUCCESS_BUY_IMMEDIATELY;
 			}
 			else return ALREADY_SOLD;
