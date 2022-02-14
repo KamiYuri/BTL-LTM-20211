@@ -13,6 +13,7 @@
 #define ALREADY_SOLD "60"
 #define SUCCESS_CREATE_ROOM "70"
 #define INVALID_INFORMATION "71"
+#define ROOM_ID_NOT_FOUND "90"
 #define MAX_CLIENT 1024
 #define MAX_ROOM 1024
 #define ENDING_DELIMITER "\r\n"

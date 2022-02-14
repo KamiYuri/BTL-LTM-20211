@@ -75,7 +75,7 @@ string join_room(string room_id, string user_id, vector<Room> *rooms, vector<Use
 			}
 		}
 	}
-	return ROOM_NOT_FOUND;
+	return ROOM_ID_NOT_FOUND;
 }
 
 string bid(int price, string room_id, string user_id, vector<Room> *rooms) {
@@ -89,7 +89,7 @@ string bid(int price, string room_id, string user_id, vector<Room> *rooms) {
 			else return LOWER_THAN_CURRENT_PRICE;
 		}
 	}
-	return "Wrong ID";
+	return ROOM_ID_NOT_FOUND;
 }
 
 string buy_immediately(string room_id, string user_id, vector<Room> *rooms) {
@@ -102,7 +102,7 @@ string buy_immediately(string room_id, string user_id, vector<Room> *rooms) {
 			else return ALREADY_SOLD;
 		}
 	}
-	return "Wrong ID";
+	return ROOM_ID_NOT_FOUND;
 }
 
 string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int id_count) {
