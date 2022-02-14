@@ -1,6 +1,8 @@
 package com.kamiyuri;
 
+import com.kamiyuri.TCP.Response;
 import com.kamiyuri.TCP.TCP;
+import com.kamiyuri.model.Account;
 import com.kamiyuri.model.RoomTreeItem;
 import javafx.scene.control.TreeItem;
 
@@ -8,6 +10,7 @@ import java.io.IOException;
 
 public class AuctionManager {
     private TCP tcp;
+    private Account account;
 
     public AuctionManager() throws IOException {
         this.tcp = new TCP();
@@ -28,6 +31,19 @@ public class AuctionManager {
     }
 
     public String exchangeMessage(String request) throws IOException {
-        return tcp.exchangeMessage(request);
+        String response =  tcp.exchangeMessage(request);
+        return Response.handle(response);
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public String getUserId() {
+        return account.getUserId();
+    }
+
+    public String getUserName() {
+        return account.getUsername();
     }
 }

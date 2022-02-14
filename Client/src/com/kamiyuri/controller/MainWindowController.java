@@ -5,6 +5,7 @@ import com.kamiyuri.view.ViewFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
@@ -20,6 +21,12 @@ public class MainWindowController extends BaseController implements Initializabl
 
     @FXML
     private TreeView<String> userRoomTreeView;
+
+    @FXML
+    private Label userId;
+
+    @FXML
+    private Label userName;
 
     @FXML
     private Button refreshBtn;
@@ -45,8 +52,14 @@ public class MainWindowController extends BaseController implements Initializabl
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        setUpUserInf();
         setUpTreeView();
         setUpRefreshBtn();
+    }
+
+    private void setUpUserInf() {
+        this.userId.setText(auctionManager.getUserId());
+        this.userName.setText(auctionManager.getUserName());
     }
 
     private void setUpRefreshBtn() {

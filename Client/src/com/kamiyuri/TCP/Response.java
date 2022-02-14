@@ -29,6 +29,6 @@ public class Response {
         if(response.charAt(1) == '1') {
             return null;
         }
-        return response.substring(2);
+        return response.substring(2).replace("\r\n", "");
     }
 }

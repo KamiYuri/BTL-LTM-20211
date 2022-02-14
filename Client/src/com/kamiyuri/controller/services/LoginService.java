@@ -39,6 +39,7 @@ public class LoginService extends Service<LoginResult> {
                 return LoginResult.FAILED_BY_UNEXPECTED_ERROR;
             } else {
                 account.setUserId(response);
+                auctionManager.setAccount(account);
             }
         } catch (IOException e){
             return LoginResult.FAILED_BY_UNEXPECTED_ERROR;
