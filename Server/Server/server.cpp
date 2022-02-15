@@ -85,30 +85,22 @@ int Send(SOCKET, char *, int, int);
 void log_in_handler(string email, string password, SOCKET client_socket) {
 	string message = login(email, password, client_socket, &users, user_id_count);
 	strcpy_s(buff, message.length()+1, &message[0]);
-	ret = send(client_socket, buff, strlen(buff), 0);
-	if (ret == SOCKET_ERROR)
-		printf("Error %d", WSAGetLastError());
+	ret = Send(client_socket, buff, strlen(buff), 0);
 };
 void log_out_handler(string user_id, SOCKET client_socket) {
 	string message = logout(user_id, &users);
 	strcpy_s(buff, message.length() + 1, &message[0]);
-	ret = send(client_socket, buff, strlen(buff), 0);
-	if (ret == SOCKET_ERROR)
-		printf("Error %d", WSAGetLastError());
+	ret = Send(client_socket, buff, strlen(buff), 0);
 };
 void show_rooms_handler(SOCKET client_socket) {
 	string message = show_room(&rooms);
 	strcpy_s(buff, message.length() + 1, &message[0]);
-	ret = send(client_socket, buff, strlen(buff), 0);
-	if (ret == SOCKET_ERROR)
-		printf("Error %d", WSAGetLastError());
+	ret = Send(client_socket, buff, strlen(buff), 0);
 };
 void join_room_handler(string room_id, string user_id, SOCKET client_socket) {
 	string message = join_room(room_id, user_id, &rooms, &users);
 	strcpy_s(buff, message.length() + 1, &message[0]);
-	ret = send(client_socket, buff, strlen(buff), 0);
-	if (ret == SOCKET_ERROR)
-		printf("Error %d", WSAGetLastError());
+	ret = Send(client_socket, buff, strlen(buff), 0);
 };
 void bid_handler(int price, string room_id, string user_id, SOCKET client_socket) {
 	string message = bid(price, room_id, user_id, &rooms);
@@ -131,9 +123,7 @@ void bid_handler(int price, string room_id, string user_id, SOCKET client_socket
 void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket) {
 	string message = buy_immediately(room_id, user_id, &rooms);
 	strcpy_s(buff, message.length() + 1, &message[0]);
-	ret = send(client_socket, buff, strlen(buff), 0);
-	if (ret == SOCKET_ERROR)
-		printf("Error %d", WSAGetLastError());
+	ret = Send(client_socket, buff, strlen(buff), 0);
 };
 
 void create_room_handler(

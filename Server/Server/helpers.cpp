@@ -70,8 +70,10 @@ string join_room(string room_id, string user_id, vector<Room> *rooms, vector<Use
 	for (int i = 0;i<(*rooms).size();i++) {
 		if (room_id == (*rooms)[i].room_id) {
 			for (int j = 0; j < (*users).size(); j++) {
-				(*rooms)[i].client_list.push_back((*users)[j]);
-				return SUCCESS_JOIN_ROOM;
+				if (user_id == (*users)[i].user_id) {
+					(*rooms)[i].client_list.push_back((*users)[j]);
+					return SUCCESS_JOIN_ROOM;
+				}
 			}
 		}
 	}
