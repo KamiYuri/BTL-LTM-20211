@@ -14,12 +14,12 @@
 #include <ctime>
 #include <fstream>
 #include "process.h"
+#include <processthreadsapi.h>
 #pragma comment(lib, "Ws2_32.lib")
 
 #define SERVER_ADDR "127.0.0.1"
 #define PORT 5500
 #define BUFF_SIZE 2048
-
 using namespace std;
 
 char send_buff[BUFF_SIZE], recv_buff[BUFF_SIZE], buff[BUFF_SIZE];
@@ -32,39 +32,7 @@ vector<Room> rooms;
 int user_id_count = 0;
 int room_id_count = 0;
 // data structure declaration
-unsigned __stdcall timer_thread(void *param) {
-	int count = 0;
-	string room_id = (char *)param;
-	while (1) {
-		int test_time = 5000;
-		Sleep(test_time);
-		for (int i = 0;i < rooms.size();i++) {
-			if (rooms[i].room_id == room_id)
-			{
-				vector<User> participants = rooms[i].client_list;
-				for (int j = 0;j < participants.size();j++) {
-					string message = "user id: " + rooms[i].current_highest_user + 
-						"+ current price: " + to_string(rooms[i].current_price) + 
-						"+ participants number:" + to_string(participants.size());
-					strcpy_s(buff, message.length() + 1, &message[0]);
-					ret = send(participants[j].socket, buff, strlen(buff), 0);
-					if (ret == SOCKET_ERROR)
-					{
-						printf("Error %d: Cannot send data.\n", WSAGetLastError());
-						break;
-					}
-				}
-			}
-		}
 
-
-	}
-	
-	return 0;
-}
-
-
-// change room array to vector to have unlimited size
 void filter_request(string message, SOCKET client_socket);
 void log_in_handler(string email, string password, SOCKET client_socket);
 void log_out_handler(string user_id, SOCKET client_socket);
@@ -80,39 +48,215 @@ void create_room_handler(
 	SOCKET client_socket);
 int Receive(SOCKET, char *, int, int);
 int Send(SOCKET, char *, int, int);
+void byte_stream_sender(SOCKET client, string message);
+string byte_stream_receiver(string* message_queue, string received_message);
+unsigned __stdcall timer_thread(void *param);
 
+int main(int argc, char* argv[])
+{
+	DWORD		nEvents = 0;
+	DWORD		index;
+	SOCKET		socks[WSA_MAXIMUM_WAIT_EVENTS];
+	WSAEVENT	events[WSA_MAXIMUM_WAIT_EVENTS];
+	WSANETWORKEVENTS sockEvent;
+
+	//Step 1: Initiate WinSock
+	WSADATA wsaData;
+	WORD wVersion = MAKEWORD(2, 2);
+	if (WSAStartup(wVersion, &wsaData)) {
+		printf("Winsock 2.2 is not supported\n");
+		return 0;
+	}
+
+	//Step 2: Construct LISTEN socket	
+	SOCKET listenSock;
+	listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+	//Step 3: Bind address to socket
+	sockaddr_in serverAddr;
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(PORT);
+	inet_pton(AF_INET, SERVER_ADDR, &serverAddr.sin_addr);
+
+	socks[0] = listenSock;
+	events[0] = WSACreateEvent(); //create new events
+	nEvents++;
+
+	// Associate event types FD_ACCEPT and FD_CLOSE
+	// with the listening socket and newEvent   
+	WSAEventSelect(socks[0], events[0], FD_ACCEPT | FD_CLOSE);
+
+
+	if (bind(listenSock, (sockaddr *)&serverAddr, sizeof(serverAddr)))
+	{
+		printf("Error %d: Cannot associate a local address with server socket.", WSAGetLastError());
+		return 0;
+	}
+
+	//Step 4: Listen request from client
+	if (listen(listenSock, 10)) {
+		printf("Error %d: Cannot place server socket in state LISTEN.", WSAGetLastError());
+		return 0;
+	}
+
+	printf("Server started!\n");
+
+	SOCKET connSock;
+	sockaddr_in clientAddr;
+	int clientAddrLen = sizeof(clientAddr);
+	int ret, i;
+
+	for (i = 1; i < WSA_MAXIMUM_WAIT_EVENTS; i++) {
+		socks[i] = 0;
+	}
+	while (1) {
+		//wait for network events on all socket
+		index = WSAWaitForMultipleEvents(nEvents, events, FALSE, WSA_INFINITE, FALSE);
+		if (index == WSA_WAIT_FAILED) {
+			printf("Error %d: WSAWaitForMultipleEvents() failed\n", WSAGetLastError());
+		}
+
+		index = index - WSA_WAIT_EVENT_0;
+		WSAEnumNetworkEvents(socks[index], events[index], &sockEvent);
+
+		//reset event
+		WSAResetEvent(events[index]);
+
+		if (sockEvent.lNetworkEvents & FD_ACCEPT) {
+			if (sockEvent.iErrorCode[FD_ACCEPT_BIT] != 0) {
+				printf("FD_ACCEPT failed with error %d\n", sockEvent.iErrorCode[FD_READ_BIT]);
+				// handle client error here
+			}
+
+			if ((connSock = accept(socks[index], (sockaddr *)&clientAddr, &clientAddrLen)) == SOCKET_ERROR) {
+				printf("Error %d: Cannot permit incoming connection.\n", WSAGetLastError());
+				// handle client error here
+				break;
+			}
+
+			//Add new socket into socks array
+			int i;
+			if (nEvents == WSA_MAXIMUM_WAIT_EVENTS) {
+				printf("\nToo many clients.");
+				closesocket(connSock);
+			}
+			else {
+				socks[nEvents] = connSock;
+				events[nEvents] = WSACreateEvent();
+				WSAEventSelect(socks[nEvents], events[nEvents], FD_READ | FD_CLOSE);
+				nEvents++;
+			}
+			for (i = 1; i < WSA_MAXIMUM_WAIT_EVENTS; i++)
+				if (socks[i] == 0) {
+					socks[i] = connSock;
+					events[i] = WSACreateEvent();
+					WSAEventSelect(socks[i], events[i], FD_READ | FD_CLOSE);
+					nEvents++;
+					break;
+				}
+		}
+
+		if (sockEvent.lNetworkEvents & FD_READ) {
+			//Receive message from client
+			if (sockEvent.iErrorCode[FD_READ_BIT] != 0) {
+				printf("FD_READ failed with error %d\n", sockEvent.iErrorCode[FD_READ_BIT]);
+			}
+
+			ret = Receive(socks[index], recv_buff, BUFF_SIZE, 0);
+
+			//Release socket and event if an error occurs
+			if (ret <= 0) {
+				closesocket(socks[index]);
+				WSACloseEvent(events[index]);
+
+				socks[index] = socks[nEvents - 1];
+				events[index] = events[nEvents - 1];
+				nEvents--;
+			}
+			else {								
+				//echo to client
+				recv_buff[ret] = 0;
+				string received_message = recv_buff;
+				string message = byte_stream_receiver(message_queue, received_message);
+				filter_request(message, socks[index]);
+				//memcpy(sendBuff, recvBuff, ret);
+				//Send(socks[index], sendBuff, ret, 0);
+
+				//reset event
+				WSAResetEvent(events[index]);
+			}
+		}
+
+		if (sockEvent.lNetworkEvents & FD_CLOSE) {
+			if (sockEvent.iErrorCode[FD_CLOSE_BIT] != 0) {
+				printf("FD_CLOSE failed with error %d\n", sockEvent.iErrorCode[FD_CLOSE_BIT]);
+			}
+			//Release socket and event
+			closesocket(socks[index]);
+			socks[index] = 0;
+			WSACloseEvent(events[index]);
+			nEvents--;
+		}
+	}
+	return 0;
+}
+
+unsigned __stdcall timer_thread(void *param) {
+	int count = 0;
+	string room_id = (char *)param;
+	while (1) {
+		int test_time = 10000;
+		Sleep(test_time);
+		for (int i = 0;i < rooms.size();i++) {
+			if (rooms[i].room_id == room_id)
+			{
+				vector<User> participants = rooms[i].client_list;
+				for (int j = 0;j < participants.size();j++) {
+					string message = "user id: " + rooms[i].current_highest_user +
+						"+ current price: " + to_string(rooms[i].current_price) +
+						"+ participants number:" + to_string(participants.size());
+					strcpy_s(buff, message.length() + 1, &message[0]);
+					ret = send(participants[j].socket, buff, strlen(buff), 0);
+					if (ret == SOCKET_ERROR)
+					{
+						printf("Error %d: Cannot send data.\n", WSAGetLastError());
+						break;
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
 
 void log_in_handler(string email, string password, SOCKET client_socket) {
 	string message = login(email, password, client_socket, &users, &user_id_count);
-	strcpy_s(buff, message.length()+1, &message[0]);
-	ret = Send(client_socket, buff, strlen(buff), 0);
+	byte_stream_sender(client_socket, message);
 };
 void log_out_handler(string user_id, SOCKET client_socket) {
 	string message = logout(user_id, &users);
-	strcpy_s(buff, message.length() + 1, &message[0]);
-	ret = Send(client_socket, buff, strlen(buff), 0);
+	byte_stream_sender(client_socket, message);
 };
 void show_rooms_handler(SOCKET client_socket) {
 	string message = show_room(&rooms);
-	strcpy_s(buff, message.length() + 1, &message[0]);
-	ret = Send(client_socket, buff, strlen(buff), 0);
+	byte_stream_sender(client_socket, message);
 };
 void join_room_handler(string room_id, string user_id, SOCKET client_socket) {
 	string message = join_room(room_id, user_id, &rooms, &users);
-	strcpy_s(buff, message.length() + 1, &message[0]);
-	ret = Send(client_socket, buff, strlen(buff), 0);
+	byte_stream_sender(client_socket, message);
 };
 void bid_handler(int price, string room_id, string user_id, SOCKET client_socket) {
 	string message = bid(price, room_id, user_id, &rooms);
 	if (message.substr(0, 2) == SUCCESS_BID) {
+		// timer thread reset
 		int room_index = stoi(message.substr(2, message.length() - 2));
-		CloseHandle(rooms[room_index].timer_thread);
+		TerminateThread(rooms[room_index].timer_thread, 0);
 		char* room_id_in_char = (char*)malloc(sizeof(char) * 1000);
 		strcpy_s(room_id_in_char, room_id.length() + 1, &room_id[0]);
 		hthread = (HANDLE)_beginthreadex(0, 0, timer_thread, (void *)room_id_in_char, 0, 0); //start thread
 		rooms[room_index].timer_thread = hthread;
-		strcpy_s(buff, message.length() + 1, &message[0]);
-		ret = send(client_socket, buff, strlen(buff), 0);
+
+		byte_stream_sender(client_socket, message);
 		if (ret == SOCKET_ERROR)
 			printf("Error %d", WSAGetLastError());
 	}
@@ -122,8 +266,7 @@ void bid_handler(int price, string room_id, string user_id, SOCKET client_socket
 };
 void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket) {
 	string message = buy_immediately(room_id, user_id, &rooms);
-	strcpy_s(buff, message.length() + 1, &message[0]);
-	ret = Send(client_socket, buff, strlen(buff), 0);
+	byte_stream_sender(client_socket, message);
 };
 
 void create_room_handler(
@@ -197,162 +340,8 @@ void byte_stream_sender(SOCKET client, string message) {
 		}
 	}
 
-	
+
 };
-
-
-int main(int argc, char* argv[])
-{
-	DWORD		nEvents = 0;
-	DWORD		index;
-	SOCKET		socks[WSA_MAXIMUM_WAIT_EVENTS];
-	WSAEVENT	events[WSA_MAXIMUM_WAIT_EVENTS];
-	WSANETWORKEVENTS sockEvent;
-
-	//Step 1: Initiate WinSock
-	WSADATA wsaData;
-	WORD wVersion = MAKEWORD(2, 2);
-	if (WSAStartup(wVersion, &wsaData)) {
-		printf("Winsock 2.2 is not supported\n");
-		return 0;
-	}
-
-	//Step 2: Construct LISTEN socket	
-	SOCKET listenSock;
-	listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-	//Step 3: Bind address to socket
-	sockaddr_in serverAddr;
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(PORT);
-	inet_pton(AF_INET, SERVER_ADDR, &serverAddr.sin_addr);
-
-	socks[0] = listenSock;
-	events[0] = WSACreateEvent(); //create new events
-	nEvents++;
-
-	// Associate event types FD_ACCEPT and FD_CLOSE
-	// with the listening socket and newEvent   
-	WSAEventSelect(socks[0], events[0], FD_ACCEPT | FD_CLOSE);
-
-
-	if (bind(listenSock, (sockaddr *)&serverAddr, sizeof(serverAddr)))
-	{
-		printf("Error %d: Cannot associate a local address with server socket.", WSAGetLastError());
-		return 0;
-	}
-
-	//Step 4: Listen request from client
-	if (listen(listenSock, 10)) {
-		printf("Error %d: Cannot place server socket in state LISTEN.", WSAGetLastError());
-		return 0;
-	}
-
-	printf("Server started!\n");
-
-	SOCKET connSock;
-	sockaddr_in clientAddr;
-	int clientAddrLen = sizeof(clientAddr);
-	int ret, i;
-
-	for (i = 1; i < WSA_MAXIMUM_WAIT_EVENTS; i++) {
-		socks[i] = 0;
-	}
-	while (1) {
-		//wait for network events on all socket
-		index = WSAWaitForMultipleEvents(nEvents, events, FALSE, WSA_INFINITE, FALSE);
-		if (index == WSA_WAIT_FAILED) {
-			printf("Error %d: WSAWaitForMultipleEvents() failed\n", WSAGetLastError());
-			break;
-		}
-
-		index = index - WSA_WAIT_EVENT_0;
-		WSAEnumNetworkEvents(socks[index], events[index], &sockEvent);
-
-		//reset event
-		WSAResetEvent(events[index]);
-
-		if (sockEvent.lNetworkEvents & FD_ACCEPT) {
-			if (sockEvent.iErrorCode[FD_ACCEPT_BIT] != 0) {
-				printf("FD_ACCEPT failed with error %d\n", sockEvent.iErrorCode[FD_READ_BIT]);
-				break;
-				// handle client error here
-			}
-
-			if ((connSock = accept(socks[index], (sockaddr *)&clientAddr, &clientAddrLen)) == SOCKET_ERROR) {
-				printf("Error %d: Cannot permit incoming connection.\n", WSAGetLastError());
-				// handle client error here
-				break;
-			}
-
-			//Add new socket into socks array
-			int i;
-			if (nEvents == WSA_MAXIMUM_WAIT_EVENTS) {
-				printf("\nToo many clients.");
-				closesocket(connSock);
-			}
-			else {
-				socks[nEvents] = connSock;
-				events[nEvents] = WSACreateEvent();
-				WSAEventSelect(socks[nEvents], events[nEvents], FD_READ | FD_CLOSE);
-				nEvents++;
-			}
-			for (i = 1; i < WSA_MAXIMUM_WAIT_EVENTS; i++)
-				if (socks[i] == 0) {
-					socks[i] = connSock;
-					events[i] = WSACreateEvent();
-					WSAEventSelect(socks[i], events[i], FD_READ | FD_CLOSE);
-					nEvents++;
-					break;
-				}
-		}
-
-		if (sockEvent.lNetworkEvents & FD_READ) {
-			//Receive message from client
-			if (sockEvent.iErrorCode[FD_READ_BIT] != 0) {
-				printf("FD_READ failed with error %d\n", sockEvent.iErrorCode[FD_READ_BIT]);
-				break;
-			}
-
-			ret = Receive(socks[index], recv_buff, BUFF_SIZE, 0);
-
-			//Release socket and event if an error occurs
-			if (ret <= 0) {
-				closesocket(socks[index]);
-				WSACloseEvent(events[index]);
-
-				socks[index] = socks[nEvents - 1];
-				events[index] = events[nEvents - 1];
-				nEvents--;
-			}
-			else {								
-				//echo to client
-				recv_buff[ret] = 0;
-				string message = recv_buff;
-				//string message = byte_stream_receiver(message_queue, received_message);
-				filter_request(message, socks[index]);
-				//memcpy(sendBuff, recvBuff, ret);
-				//Send(socks[index], sendBuff, ret, 0);
-
-				//reset event
-				WSAResetEvent(events[index]);
-			}
-		}
-
-		if (sockEvent.lNetworkEvents & FD_CLOSE) {
-			if (sockEvent.iErrorCode[FD_CLOSE_BIT] != 0) {
-				printf("FD_CLOSE failed with error %d\n", sockEvent.iErrorCode[FD_CLOSE_BIT]);
-				break;
-			}
-			//Release socket and event
-			closesocket(socks[index]);
-			socks[index] = 0;
-			WSACloseEvent(events[index]);
-			nEvents--;
-		}
-	}
-	return 0;
-}
 
 /* The recv() wrapper function */
 int Receive(SOCKET s, char *buff, int size, int flags) {
