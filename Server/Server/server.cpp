@@ -22,19 +22,21 @@
 
 using namespace std;
 
-char sendBuff[BUFF_SIZE], recvBuff[BUFF_SIZE], buff[BUFF_SIZE];
+char send_buff[BUFF_SIZE], recv_buff[BUFF_SIZE], buff[BUFF_SIZE];
+string message_queue[10000]; //  temp use, change size later
 int ret;
+HANDLE hthread;
 
 vector<User> users;
 vector<Room> rooms;
 int user_id_count = 0;
 int room_id_count = 0;
 // data structure declaration
-unsigned __stdcall echoThread(void *param) {
+unsigned __stdcall timer_thread(void *param) {
+	int count = 0;
 	string room_id = (char *)param;
-	cout << "Room created with id:"<<room_id << endl;
 	while (1) {
-		int test_time = 60000;
+		int test_time = 5000;
 		Sleep(test_time);
 		for (int i = 0;i < rooms.size();i++) {
 			if (rooms[i].room_id == room_id)
@@ -76,6 +78,9 @@ void create_room_handler(
 	int starting_price,
 	int buy_immediately_price,
 	SOCKET client_socket);
+int Receive(SOCKET, char *, int, int);
+int Send(SOCKET, char *, int, int);
+
 
 void log_in_handler(string email, string password, SOCKET client_socket) {
 	string message = login(email, password, client_socket, &users, user_id_count);
@@ -107,10 +112,21 @@ void join_room_handler(string room_id, string user_id, SOCKET client_socket) {
 };
 void bid_handler(int price, string room_id, string user_id, SOCKET client_socket) {
 	string message = bid(price, room_id, user_id, &rooms);
-	strcpy_s(buff, message.length() + 1, &message[0]);
-	ret = send(client_socket, buff, strlen(buff), 0);
-	if (ret == SOCKET_ERROR)
-		printf("Error %d", WSAGetLastError());
+	if (message.substr(0, 2) == SUCCESS_BID) {
+		int room_index = stoi(message.substr(2, message.length() - 2));
+		CloseHandle(rooms[room_index].timer_thread);
+		char* room_id_in_char = (char*)malloc(sizeof(char) * 1000);
+		strcpy_s(room_id_in_char, room_id.length() + 1, &room_id[0]);
+		hthread = (HANDLE)_beginthreadex(0, 0, timer_thread, (void *)room_id_in_char, 0, 0); //start thread
+		rooms[room_index].timer_thread = hthread;
+		strcpy_s(buff, message.length() + 1, &message[0]);
+		ret = send(client_socket, buff, strlen(buff), 0);
+		if (ret == SOCKET_ERROR)
+			printf("Error %d", WSAGetLastError());
+	}
+	else {
+
+	}
 };
 void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket) {
 	string message = buy_immediately(room_id, user_id, &rooms);
@@ -130,11 +146,16 @@ void create_room_handler(
 	string response = create_room(item_name, item_description, starting_price, buy_immediately_price, &rooms, room_id_count);
 	if (response.substr(0, 2) == SUCCESS_CREATE_ROOM)
 	{
-		string room_id = response.substr(2, room_id.length() - 2);
+		int delimiter_index = response.find(SPLITING_DELIMITER_1);
+		string room_id = response.substr(2, delimiter_index - 2);
+		cout << "Room created with id:" << room_id << endl;
+		int room_index = stoi(response.substr(delimiter_index + 2, response.length() - delimiter_index));
+
 		char* room_id_in_char = (char*)malloc(sizeof(char) * 1000);
 		strcpy_s(room_id_in_char, room_id.length() + 1, &room_id[0]);
 
-		_beginthreadex(0, 0, echoThread, (void *)room_id_in_char, 0, 0); //start thread
+		hthread = (HANDLE)_beginthreadex(0, 0, timer_thread, (void *)room_id_in_char, 0, 0); //start thread
+		rooms[room_index].timer_thread = hthread;
 	}
 	else
 	{
@@ -143,9 +164,52 @@ void create_room_handler(
 
 };
 
+string byte_stream_receiver(string* message_queue, string received_message) {
+	*message_queue = *message_queue + received_message;
+	string user_message;
+	int delimiter_position = (*message_queue).find(ENDING_DELIMITER);
+	// if there is data end signal => handle
+	if (delimiter_position != -1)
+		user_message = (*message_queue).substr(0, delimiter_position);
 
-int Receive(SOCKET, char *, int, int);
-int Send(SOCKET, char *, int, int);
+	*message_queue = (*message_queue).substr(delimiter_position + 2, (*message_queue).length() - delimiter_position);
+	return user_message;
+}
+
+void byte_stream_sender(SOCKET client, string message) {
+	int message_length = message.length();
+	int left_bytes = message_length;
+	int index = 0;
+
+	//split message to send when message's size is larger than buff size
+	while (left_bytes != 0)
+	{
+		// if left message size <  buff_size => send everything left
+		if (left_bytes <= BUFF_SIZE)
+		{
+			string tmp = message.substr(index, left_bytes);
+			strcpy_s(send_buff, tmp.length() + 1, &tmp[0]);
+			left_bytes = 0;
+			ret = Send(client, send_buff, strlen(send_buff), 0);
+			if (ret == SOCKET_ERROR)
+				printf("Error %d", WSAGetLastError());
+		}
+		else
+		{
+			// send parts of message
+			string tmp = message.substr(index, BUFF_SIZE);
+			strcpy_s(send_buff, tmp.length() + 1, &tmp[0]);
+			ret = Send(client, send_buff, strlen(send_buff), 0);
+			if (ret == SOCKET_ERROR)
+				printf("Error %d", WSAGetLastError());
+			left_bytes = left_bytes - ret;
+			index = index + ret;
+		}
+	}
+
+	
+};
+
 
 int main(int argc, char* argv[])
 {
@@ -260,7 +324,7 @@ int main(int argc, char* argv[])
 				break;
 			}
 
-			ret = Receive(socks[index], recvBuff, BUFF_SIZE, 0);
+			ret = Receive(socks[index], recv_buff, BUFF_SIZE, 0);
 
 			//Release socket and event if an error occurs
 			if (ret <= 0) {
@@ -273,9 +337,9 @@ int main(int argc, char* argv[])
 			}
 			else {								
 				//echo to client
-				recvBuff[ret] = 0;
-				string message = recvBuff;
-                // chưa có truyền dòng
+				recv_buff[ret] = 0;
+				string message = recv_buff;
+				//string message = byte_stream_receiver(message_queue, received_message);
 				filter_request(message, socks[index]);
 				//memcpy(sendBuff, recvBuff, ret);
 				//Send(socks[index], sendBuff, ret, 0);

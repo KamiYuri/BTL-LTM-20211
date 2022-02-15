@@ -20,7 +20,7 @@
 
 using namespace std;
 
-string login(string email, string password, /*char client_ip[INET_ADDRSTRLEN], int client_port,*/ SOCKET client_socket, vector<User> *users, int id_count) {
+string login(string email, string password, SOCKET client_socket, vector<User> *users, int id_count) {
 	ifstream fileAcc;
 	fileAcc.open("account.txt");
 	if (fileAcc.is_open()) {
@@ -84,7 +84,7 @@ string bid(int price, string room_id, string user_id, vector<Room> *rooms) {
 			if (price >(*rooms)[i].current_price) {
 				(*rooms)[i].current_price = price;
 				(*rooms)[i].current_highest_user = user_id;
-				return SUCCESS_BID;
+				return SUCCESS_BID+to_string(i);
 			}
 			else return LOWER_THAN_CURRENT_PRICE;
 		}
@@ -115,7 +115,7 @@ string create_room(string item_name, string item_description, int starting_price
 		id_count++;
 		tmp_room.room_id = to_string(id_count);
 		(*rooms).push_back(tmp_room);
-		return SUCCESS_CREATE_ROOM + tmp_room.room_id;
+		return SUCCESS_CREATE_ROOM + tmp_room.room_id + SPLITING_DELIMITER_1 + to_string((*rooms).size() - 1);
 	}
 	else return INVALID_INFORMATION;
 }
