@@ -7,10 +7,13 @@ import com.kamiyuri.controller.MainWindowController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class ViewFactory {
     private AuctionManager auctionManager;
@@ -35,6 +38,18 @@ public class ViewFactory {
         Stage stage = new Stage();
         stage.setScene(scene);
         stage.setResizable(false);
+
+//        stage.setOnCloseRequest(event -> {
+//            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+//            Optional<ButtonType> option = alert.showAndWait();
+//            if(option.get() == ButtonType.OK){
+//                auctionManager.diconnect();
+//                stage.close();
+//            } else if(option.get() == ButtonType.CANCEL) {
+//                return;
+//            }
+//
+//        });
         stage.show();
         activeStages.add(stage);
     }

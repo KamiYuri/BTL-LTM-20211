@@ -31,8 +31,8 @@ public class AuctionManager {
     }
 
     public String exchangeMessage(String request) throws IOException {
-        String response =  tcp.exchangeMessage(request);
-        return Response.handle(response);
+        this.tcp.send(request);
+        return Response.handle(this.tcp.receive());
     }
 
     public void setAccount(Account account) {
@@ -45,5 +45,13 @@ public class AuctionManager {
 
     public String getUserName() {
         return account.getUsername();
+    }
+
+    public void diconnect() {
+        try {
+            tcp.cancel();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

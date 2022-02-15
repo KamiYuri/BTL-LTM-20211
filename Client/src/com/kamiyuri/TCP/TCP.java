@@ -23,9 +23,11 @@ public class TCP {
         in = new BufferedReader(new InputStreamReader(connSocket.getInputStream()));
     }
 
-    public String exchangeMessage(String request) throws IOException {
+    public void send(String request){
         out.println(request);
+    }
 
+    public String receive() throws IOException {
         char[] charArray = new char[1024 * 1024];
         StringBuilder response = new StringBuilder();
         int numCharsRead;
@@ -33,5 +35,9 @@ public class TCP {
         response.append(charArray, 0, numCharsRead);
 
         return response.toString();
+    }
+
+    public void cancel() throws IOException {
+        connSocket.close();
     }
 }
