@@ -1,19 +1,50 @@
 package com.kamiyuri;
 
-import com.kamiyuri.TCP.Response;
-import com.kamiyuri.TCP.TCP;
+import com.kamiyuri.TCP.ConnectionThread;
+import com.kamiyuri.TCP.RequestType;
 import com.kamiyuri.model.Account;
 import com.kamiyuri.model.RoomTreeItem;
 import javafx.scene.control.TreeItem;
 
 import java.io.IOException;
+import java.util.function.Function;
 
 public class AuctionManager {
-    private TCP tcp;
+    private ConnectionThread connectionThread;
     private Account account;
+    private String loginResponse, logoutResponse, refreshResponse;
 
     public AuctionManager() throws IOException {
-        this.tcp = new TCP();
+        this.connectionThread = new ConnectionThread();
+        setupConnectionThread();
+        this.connectionThread.start();
+    }
+
+    private void setupConnectionThread() {
+        connectionThread.setResponseCallback(response -> {
+            System.out.println(response);
+            RequestType code = RequestType.values()[Character.getNumericValue(response.charAt(0)) - 1];
+
+            switch (code) {
+                case LOGIN:
+                    if (response.charAt(1) == '1') {
+                        loginResponse = "";
+                    }
+                    loginResponse = response.substring(2).replace("\r\n", "");
+                    break;
+                case LOGOUT:
+                    if (response.charAt(1) == '1') {
+                        logoutResponse = "";
+                    }
+                    logoutResponse = "1";
+                    break;
+                case REFRESH:
+                    if (response != refreshResponse){
+                        System.out.println(response);
+                        refreshResponse = response;
+                    }
+            }
+        });
     }
 
     private RoomTreeItem<String> root = new RoomTreeItem<>("");
@@ -30,11 +61,6 @@ public class AuctionManager {
 
     }
 
-    public String exchangeMessage(String request) throws IOException {
-        this.tcp.send(request);
-        return Response.handle(this.tcp.receive());
-    }
-
     public void setAccount(Account account) {
         this.account = account;
     }
@@ -47,11 +73,15 @@ public class AuctionManager {
         return account.getUsername();
     }
 
-    public void diconnect() {
-        try {
-            tcp.cancel();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void sendRequest(String request) {
+        this.connectionThread.send(request);
+    }
+
+    public String getLoginResponse() {
+        return loginResponse;
+    }
+
+    public String getLogoutResponse() {
+        return logoutResponse;
     }
 }

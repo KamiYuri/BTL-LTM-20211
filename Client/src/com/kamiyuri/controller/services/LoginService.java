@@ -33,16 +33,14 @@ public class LoginService extends Service<LoginResult> {
 
     private LoginResult login(){
         String request = RequestFactory.getRequest(LOGIN, account.getData());
-        try {
-            String response = auctionManager.exchangeMessage(request);
-            if (response.isEmpty()){
-                return LoginResult.FAILED_BY_UNEXPECTED_ERROR;
-            } else {
-                account.setUserId(response);
-                auctionManager.setAccount(account);
-            }
-        } catch (IOException e){
+        auctionManager.sendRequest(request);
+
+        String response = auctionManager.getLoginResponse();
+        if (response.isEmpty()){
             return LoginResult.FAILED_BY_UNEXPECTED_ERROR;
+        } else {
+            account.setUserId(response);
+            auctionManager.setAccount(account);
         }
         return LoginResult.SUCCESS;
     }

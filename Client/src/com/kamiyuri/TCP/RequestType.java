@@ -7,5 +7,6 @@ public enum RequestType {
     JOIN_ROOM,
     BID,
     BUY,
-    CREATE_ROOM
+    CREATE_ROOM,
+    REFRESH
 }

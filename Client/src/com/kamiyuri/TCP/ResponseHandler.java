@@ -1,13 +1,15 @@
 package com.kamiyuri.TCP;
 
 
-import javafx.scene.Parent;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-public class Response {
-    public static String handle(String response){
+public class ResponseHandler {
+    public static String handle(String response) {
         RequestType code = RequestType.values()[Character.getNumericValue(response.charAt(0)) - 1];
 
-        switch (code){
+        switch (code) {
             case LOGIN:
                 return loginHandle(response);
             case LOGOUT:
@@ -18,7 +20,7 @@ public class Response {
     }
 
     private static String logoutHandle(String response) {
-        if(response.charAt(1) == '1'){
+        if (response.charAt(1) == '1') {
             return null;
         }
 
@@ -26,7 +28,7 @@ public class Response {
     }
 
     private static String loginHandle(String response) {
-        if(response.charAt(1) == '1') {
+        if (response.charAt(1) == '1') {
             return null;
         }
         return response.substring(2).replace("\r\n", "");

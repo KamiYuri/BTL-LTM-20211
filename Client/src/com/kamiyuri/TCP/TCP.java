@@ -9,7 +9,7 @@ import java.nio.CharBuffer;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-public class TCP {
+public class TCP{
     private Socket connSocket;
     private String serverIp = "127.0.0.1";
     private short serverPort = 5500;
@@ -19,6 +19,7 @@ public class TCP {
 
     public TCP() throws IOException {
         connSocket = new Socket(serverIp, serverPort);
+        connSocket.setTcpNoDelay(true);
         out = new PrintWriter(connSocket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(connSocket.getInputStream()));
     }
