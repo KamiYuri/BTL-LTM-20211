@@ -20,7 +20,7 @@
 
 using namespace std;
 
-string login(string email, string password, SOCKET client_socket, vector<User> *users, int id_count) {
+string login(string email, string password, SOCKET client_socket, vector<User> *users, int *id_count) {
 	ifstream fileAcc;
 	fileAcc.open("account.txt");
 	if (fileAcc.is_open()) {
@@ -31,9 +31,9 @@ string login(string email, string password, SOCKET client_socket, vector<User> *
 			string pass = line.substr(space + 1);
 			if (email == account && password == pass) {
 				//them cac thong tin vao 1 tmp_user roi them vao vector
-				id_count++;
+				(*id_count)++;
 				User tmp_user;
-				tmp_user.user_id = to_string(id_count);
+				tmp_user.user_id = to_string(*id_count);
 				//tmp_user.username = email;
 				//tmp_user.password = password;
 				tmp_user.socket = client_socket;
@@ -107,15 +107,15 @@ string buy_immediately(string room_id, string user_id, vector<Room> *rooms) {
 	return ROOM_ID_NOT_FOUND;
 }
 
-string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int id_count) {
+string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int *id_count) {
 	Room tmp_room;
 	tmp_room.item_name = item_name;
 	tmp_room.item_description = item_description;
 	tmp_room.starting_price = starting_price;
 	tmp_room.buy_immediately_price = buy_immediately_price;
 	if (tmp_room.starting_price > 0 && tmp_room.buy_immediately_price > tmp_room.starting_price) {
-		id_count++;
-		tmp_room.room_id = to_string(id_count);
+		(*id_count)++;
+		tmp_room.room_id = to_string(*id_count);
 		(*rooms).push_back(tmp_room);
 		return SUCCESS_CREATE_ROOM + tmp_room.room_id + SPLITING_DELIMITER_1 + to_string((*rooms).size() - 1);
 	}

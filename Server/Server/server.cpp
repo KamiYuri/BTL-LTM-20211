@@ -83,7 +83,7 @@ int Send(SOCKET, char *, int, int);
 
 
 void log_in_handler(string email, string password, SOCKET client_socket) {
-	string message = login(email, password, client_socket, &users, user_id_count);
+	string message = login(email, password, client_socket, &users, &user_id_count);
 	strcpy_s(buff, message.length()+1, &message[0]);
 	ret = Send(client_socket, buff, strlen(buff), 0);
 };
@@ -133,7 +133,7 @@ void create_room_handler(
 	int buy_immediately_price,
 	SOCKET client_socket) {
 
-	string response = create_room(item_name, item_description, starting_price, buy_immediately_price, &rooms, room_id_count);
+	string response = create_room(item_name, item_description, starting_price, buy_immediately_price, &rooms, &room_id_count);
 	if (response.substr(0, 2) == SUCCESS_CREATE_ROOM)
 	{
 		int delimiter_index = response.find(SPLITING_DELIMITER_1);

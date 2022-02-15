@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <WS2tcpip.h>
+#include "process.h"
 using namespace std;
 
 struct User {
@@ -28,13 +29,13 @@ struct Room {
 	HANDLE timer_thread;
 };
 
-string login(string email, string password, SOCKET client_socket, vector<User> *users, int id_count);
+string login(string email, string password, SOCKET client_socket, vector<User> *users, int *id_count);
 string logout(string user_id, vector<User> *users);
 string show_room(vector<Room> *rooms);
 string join_room(string room_id, string user_id, vector<Room> *rooms, vector<User> *users);
 string bid(int price, string room_id, string user_id, vector<Room> *rooms);
 string buy_immediately(string room_id, string user_id, vector<Room> *rooms);
-string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int id_count);
+string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int *id_count);
 
 
 
