@@ -27,6 +27,7 @@ public class AuctionManager {
 
             switch (code) {
                 case LOGIN:
+                    System.out.println(response);
                     if (response.charAt(1) == '1') {
                         loginResponse = "";
                     }

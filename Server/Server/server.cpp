@@ -310,6 +310,7 @@ string byte_stream_receiver(string* message_queue, string received_message) {
 }
 
 void byte_stream_sender(SOCKET client, string message) {
+	message = message + ENDING_DELIMITER;
 	int message_length = message.length();
 	int left_bytes = message_length;
 	int index = 0;
@@ -339,8 +340,6 @@ void byte_stream_sender(SOCKET client, string message) {
 			index = index + ret;
 		}
 	}
-
-
 };
 
 /* The recv() wrapper function */
