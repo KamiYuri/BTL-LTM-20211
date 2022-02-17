@@ -60,7 +60,7 @@ string logout(string user_id, vector<User> *users){
 string show_room(vector<Room> *rooms) {
 	string message;
 	for (int i = 0;i<(*rooms).size();i++) {
-		message = SUCCESS_SHOW_ROOM + (*rooms)[i].room_id + SPLITING_DELIMITER_2 + (*rooms)[i].item_name + SPLITING_DELIMITER_2 + (*rooms)[i].item_description + SPLITING_DELIMITER_1;
+		message = SUCCESS_SHOW_ROOM + (*rooms)[i].room_id + SPLITING_DELIMITER_2 + (*rooms)[i].item_name + SPLITING_DELIMITER_1;
 	}
 	message += ENDING_DELIMITER;
 	return message;
@@ -83,12 +83,15 @@ string join_room(string room_id, string user_id, vector<Room> *rooms, vector<Use
 string bid(int price, string room_id, string user_id, vector<Room> *rooms) {
 	for (int i = 0;i<(*rooms).size();i++) {
 		if ((*rooms)[i].room_id == room_id) {
-			if (price >(*rooms)[i].current_price) {
-				(*rooms)[i].current_price = price;
-				(*rooms)[i].current_highest_user = user_id;
-				return SUCCESS_BID+to_string(i);
+			if ((*rooms)[i].room_creator_id != user_id) {
+				if (price > (*rooms)[i].current_price) {
+					(*rooms)[i].current_price = price;
+					(*rooms)[i].current_highest_user = user_id;
+					return SUCCESS_BID + to_string(i);
+				}
+				else return LOWER_THAN_CURRENT_PRICE;
 			}
-			else return LOWER_THAN_CURRENT_PRICE;
+			else return CREATOR_CANT_BID;
 		}
 	}
 	return ROOM_ID_NOT_FOUND;
@@ -97,18 +100,22 @@ string bid(int price, string room_id, string user_id, vector<Room> *rooms) {
 string buy_immediately(string room_id, string user_id, vector<Room> *rooms) {
 	for (int i = 0;i<(*rooms).size();i++) {
 		if ((*rooms)[i].room_id == room_id) {
-			if ((*rooms)[i].owner == "-1") {
-				(*rooms)[i].owner == user_id;
-				return SUCCESS_BUY_IMMEDIATELY;
+			if ((*rooms)[i].room_creator_id != user_id) {
+				if ((*rooms)[i].owner == "-1") {
+					(*rooms)[i].owner == user_id;
+					return SUCCESS_BUY_IMMEDIATELY;
+				}
+				else return ALREADY_SOLD;
 			}
-			else return ALREADY_SOLD;
+			return CREATOR_CANT_BUY;
 		}
 	}
 	return ROOM_ID_NOT_FOUND;
 }
 
-string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int *id_count) {
+string create_room(string user_id, string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int *id_count) {
 	Room tmp_room;
+	tmp_room.room_creator_id = user_id;
 	tmp_room.item_name = item_name;
 	tmp_room.item_description = item_description;
 	tmp_room.starting_price = starting_price;

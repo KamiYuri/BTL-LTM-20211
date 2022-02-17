@@ -41,6 +41,7 @@ void join_room_handler(string room_id, string user_id, SOCKET client_socket);
 void bid_handler(int price, string room_id, string user_id, SOCKET client_socket);
 void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket);
 void create_room_handler(
+	string user_id,
 	string item_name,
 	string item_description,
 	int starting_price,
@@ -270,13 +271,14 @@ void buy_immediately_handler(string room_id, string user_id, SOCKET client_socke
 };
 
 void create_room_handler(
+	string user_id,
 	string item_name,
 	string item_description,
 	int starting_price,
 	int buy_immediately_price,
 	SOCKET client_socket) {
 
-	string response = create_room(item_name, item_description, starting_price, buy_immediately_price, &rooms, &room_id_count);
+	string response = create_room(user_id, item_name, item_description, starting_price, buy_immediately_price, &rooms, &room_id_count);
 	if (response.substr(0, 2) == SUCCESS_CREATE_ROOM)
 	{
 		int delimiter_index = response.find(SPLITING_DELIMITER_1);
@@ -417,6 +419,6 @@ void filter_request(string message, SOCKET client_socket) {
 		spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1, pre_delimiter_index + 2);
 		int starting_price = stoi(payload.substr(pre_delimiter_index + 2, spliting_delimiter_index - pre_delimiter_index - 2));
 		int buy_immediately_price = stoi(payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2));
-		create_room_handler(item_name, item_description, starting_price, buy_immediately_price, client_socket);
+		create_room_handler(user_id, item_name, item_description, starting_price, buy_immediately_price, client_socket);
 	}
 }
