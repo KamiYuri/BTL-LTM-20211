@@ -1,6 +1,7 @@
 package com.kamiyuri.controller;
 
 import com.kamiyuri.AuctionManager;
+import com.kamiyuri.TCP.RequestFactory;
 import com.kamiyuri.controller.services.LoginService;
 import com.kamiyuri.model.Account;
 import com.kamiyuri.view.ViewFactory;
@@ -13,6 +14,8 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import static com.kamiyuri.TCP.RequestType.LOGIN;
 
 public class LoginWindowController extends BaseController implements Initializable {
 
@@ -33,6 +36,7 @@ public class LoginWindowController extends BaseController implements Initializab
     void loginBtnAction() {
         if (fieldsAreValid()){
             Account account = new Account(usernameField.getText(), passwordField.getText());
+
             LoginService loginService = new LoginService(auctionManager, account);
             loginService.start();
             loginService.setOnSucceeded(event -> {

@@ -40,10 +40,10 @@ string login(string email, string password, SOCKET client_socket, vector<User> *
 				//strcpy_s(tmp_user.client_ip, client_ip);
 				//tmp_user.client_port = client_port;
 				(*users).push_back(tmp_user);
-				return SUCCESS_LOGIN + tmp_user.user_id;
+				return SUCCESS_LOGIN + tmp_user.user_id + ENDING_DELIMITER;
 			}
 		}
-		return FAILED_LOGIN;
+		return string(FAILED_LOGIN) + ENDING_DELIMITER;
 	}
 }
 
@@ -51,7 +51,7 @@ string logout(string user_id, vector<User> *users){
 	for (int i = 0; i < (*users).size(); i++) {
 		if ((*users)[i].user_id == user_id) {
 			(*users).erase((*users).begin()+i-1);
-			return SUCCESS_LOGOUT;
+			return string(SUCCESS_LOGOUT) + ENDING_DELIMITER;
 		}
 	}
 	return FAILED_LOGOUT;
