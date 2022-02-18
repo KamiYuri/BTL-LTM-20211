@@ -17,6 +17,7 @@ struct User {
 };
 
 struct Room {
+	string room_creator_id;
 	vector<User> client_list;   //array of users
 	string room_id;
 	string item_name;
@@ -35,7 +36,7 @@ string show_room(vector<Room> *rooms);
 string join_room(string room_id, string user_id, vector<Room> *rooms, vector<User> *users);
 string bid(int price, string room_id, string user_id, vector<Room> *rooms);
 string buy_immediately(string room_id, string user_id, vector<Room> *rooms);
-string create_room(string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int *id_count);
+string create_room(string user_id, string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int *id_count);
 
 
 
