@@ -1,35 +1,59 @@
 package com.kamiyuri.controller;
 
 import com.kamiyuri.AuctionManager;
+import com.kamiyuri.model.Room;
 import com.kamiyuri.view.ViewFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Text;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class MainWindowController extends BaseController implements Initializable {
 
-    @FXML
-    private TreeView<String> roomTreeView;
+    private Room selectedRoom;
 
     @FXML
-    private TreeView<String> userRoomTreeView;
+    private Label itemBuyPriceLabel;
 
     @FXML
-    private Label userId;
+    private Label itemCurrentPriceLabel;
 
     @FXML
-    private Label userName;
+    private Label itemDescriptionLabel;
 
     @FXML
-    private Button refreshBtn;
+    private Label itemNameLabel;
+
+    @FXML
+    private Button refreshBtnAction;
+
+    @FXML
+    private Label roomIdLabel;
+
+    @FXML
+    private AnchorPane roomPane;
+
+    @FXML
+    private Label userIdLabel;
+
+    @FXML
+    private Label userNameLabel;
+
+    @FXML
+    void bidBtnAction() {
+
+    }
+
+    @FXML
+    void buyBtnAction() {
+
+    }
 
     @FXML
     void createRoomAction() {
@@ -46,40 +70,75 @@ public class MainWindowController extends BaseController implements Initializabl
 
     }
 
+    @FXML
+    private TreeView<String> roomTreeView;
+
     public MainWindowController(AuctionManager auctionManager, ViewFactory viewFactory, String fxmlName) {
         super(auctionManager, viewFactory, fxmlName);
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        setUpRoomPane();
         setUpUserInf();
         setUpTreeView();
-        setUpRefreshBtn();
+    }
+
+    private void setUpRoomPane() {
+        roomPane.getChildren().forEach(node -> {
+            node.setVisible(false);
+        });
     }
 
     private void setUpUserInf() {
-        this.userId.setText(auctionManager.getUserId());
-        this.userName.setText(auctionManager.getUserName());
+        this.userIdLabel.setText("Mã tài khoản: " + auctionManager.getUserId());
+        this.userNameLabel.setText("Tài khoản: " + auctionManager.getUserName());
     }
 
-    private void setUpRefreshBtn() {
-//        Image image = new Image("");
-//        ImageView imageView = new ImageView(image);
-//        refreshBtn.setGraphic(imageView);
-    }
 
     private void setUpTreeView() {
         TreeItem<String> room = new TreeItem<>("Room");
         room.setExpanded(true);
         room.getChildren().add(new TreeItem<>("a"));
-        room.getChildren().add(new TreeItem<>("a"));
-        room.getChildren().add(new TreeItem<>("a"));
+        room.getChildren().add(new TreeItem<>("b"));
+        room.getChildren().add(new TreeItem<>("c"));
 //        auctionManager.getRooms(room);
         roomTreeView.setRoot(room);
+        roomTreeView.setShowRoot(false);
 
-        TreeItem<String> userRoom = new TreeItem<>("My room");
-        userRoom.setExpanded(true);
-//        auctionManager.getUserRooms(userRoom);
-        userRoomTreeView.setRoot(userRoom);
+        roomTreeView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            Node node = event.getPickResult().getIntersectedNode();
+            if (node instanceof Text || (node instanceof TreeCell && ((TreeCell) node).getText() != null)) {
+                TreeItem selectedItem = roomTreeView.getSelectionModel().getSelectedItem();
+                showRoom(selectedItem);
+            }
+        });
+    }
+
+    private void showRoom(TreeItem selectedItem) {
+
+        Room selectedRoom = getSelectedRoom((String) selectedItem.getValue());
+
+        roomIdLabel.setText("Phòng số " + selectedRoom.getRoomId());
+        itemNameLabel.setText("Tên vật phẩm: " + selectedRoom.getItemName());
+        itemDescriptionLabel.setText("Mô tả: " + selectedRoom.getItemDescription());
+        itemCurrentPriceLabel.setText("Giá hiện tại: " + selectedRoom.getCurrentPrice() + " VNĐ");
+        itemBuyPriceLabel.setText("Giá mua: " + selectedRoom.getBuyImmediatelyPrice() + " VNĐ");
+
+        roomPane.getChildren().forEach(node -> {
+            node.setVisible(true);
+        });
+    }
+
+    private Room getSelectedRoom(String value) {
+       Room room = new Room(
+                value,
+                "abc",
+                "asdsd sadasd asdsad",
+                "123",
+                "12314"
+        );
+
+       return room;
     }
 }
