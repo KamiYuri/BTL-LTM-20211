@@ -123,6 +123,7 @@ string create_room(string user_id, string item_name, string item_description, in
 	tmp_room.item_description = item_description;
 	tmp_room.starting_price = starting_price;
 	tmp_room.buy_immediately_price = buy_immediately_price;
+	tmp_room.current_price = starting_price;
 	if (tmp_room.starting_price > 0 && tmp_room.buy_immediately_price > tmp_room.starting_price) {
 		(*id_count)++;
 		tmp_room.room_id = to_string(*id_count);
