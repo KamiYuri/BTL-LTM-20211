@@ -20,7 +20,7 @@
 #define MAX_ROOM 1024
 #define ENDING_DELIMITER "\r\n"
 #define SPLITING_DELIMITER_1 "\t\n"
-#define SPLITING_DELIMITER_2 "\y\n"
+#define SPLITING_DELIMITER_2 "\f\n"
 #define BUFF_SIZE 2048
 
 
