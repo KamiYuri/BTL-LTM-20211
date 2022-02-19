@@ -94,7 +94,7 @@ public class MainWindowController extends BaseController implements Initializabl
 
     @FXML
     void refreshRoomsAction() {
-
+        auctionManager.getRooms(roomTreeView.getRoot());
     }
 
     @FXML

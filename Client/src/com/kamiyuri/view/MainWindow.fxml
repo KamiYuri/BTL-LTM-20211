@@ -10,9 +10,9 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="236.0" prefWidth="602.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="273.0" prefWidth="606.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <MenuBar layoutY="2.0" prefHeight="25.0" prefWidth="600.0">
+      <MenuBar layoutY="2.0" prefHeight="25.0" prefWidth="605.0">
         <menus>
           <Menu mnemonicParsing="false" text="Tuỳ chọn">
             <items>
@@ -26,7 +26,7 @@
           </Menu>
         </menus>
       </MenuBar>
-      <AnchorPane fx:id="roomPane" layoutX="200.0" layoutY="75.0" prefHeight="218.0" prefWidth="402.0" style="-fx-border-style: solid; -fx-border-width: 2 0 0 2;">
+      <AnchorPane fx:id="roomPane" layoutX="201.0" layoutY="63.0" prefHeight="218.0" prefWidth="402.0" style="-fx-border-style: solid; -fx-border-width: 2 0 0 2;">
          <children>
             <AnchorPane layoutY="40.0" prefHeight="120.0" prefWidth="200.0" style="-fx-border-style: solid; -fx-border-width: 1 1 1 0;">
                <children>
@@ -60,14 +60,15 @@
             <Button layoutX="72.0" layoutY="179.0" mnemonicParsing="false" onAction="#bidBtnAction" text="Đấu giá" />
             <Button layoutX="280.0" layoutY="179.0" mnemonicParsing="false" onAction="#buyBtnAction" text="Mua" />
          </children></AnchorPane>
-      <TreeView fx:id="roomTreeView" layoutY="75.0" prefHeight="162.0" prefWidth="200.0" style="-fx-border-style: solid; -fx-border-width: 2 0 0 0;" />
-      <Label layoutX="63.0" layoutY="42.0" text="Danh sách phòng" AnchorPane.topAnchor="42.0" />
-      <Label fx:id="userNameLabel" layoutX="262.0" layoutY="42.0" text="Tài khoản: abc" />
-      <Label fx:id="userIdLabel" layoutX="425.0" layoutY="42.0" text="Mã tài khoản: 1" />
-      <Button fx:id="refreshBtnAction" layoutX="82.0" layoutY="255.0" mnemonicParsing="false" onAction="#refreshRoomsAction" text="Làm mới">
+      <TreeView fx:id="roomTreeView" layoutX="1.0" layoutY="63.0" prefHeight="162.0" prefWidth="200.0" style="-fx-border-style: solid; -fx-border-width: 2 0 0 0;" />
+      <Label layoutX="54.0" layoutY="35.0" text="Danh sách phòng" AnchorPane.topAnchor="35.0" />
+      <Label fx:id="userNameLabel" layoutX="403.0" layoutY="6.0" text="Tài khoản: abc" />
+      <Label fx:id="userIdLabel" layoutX="509.0" layoutY="6.0" text="Mã tài khoản: 1" />
+      <Button fx:id="refreshBtnAction" layoutX="73.0" layoutY="243.0" mnemonicParsing="false" onAction="#refreshRoomsAction" text="Làm mới">
          <font>
             <Font size="11.0" />
          </font>
       </Button>
+      <Label alignment="CENTER" layoutX="203.0" layoutY="35.0" prefHeight="17.0" prefWidth="405.0" text="Label" />
    </children>
 </AnchorPane>

@@ -26,12 +26,12 @@ public class AuctionManager {
                 loginResponse = response;
                 break;
             case LOGOUT:
-
                 break;
             case SHOW_ROOM:
                 roomResponse = response;
                 break;
             case CREATE_ROOM:
+                System.out.println(response);
                 createRoomResponse = response;
                 break;
         }
