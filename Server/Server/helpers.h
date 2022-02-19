@@ -37,6 +37,6 @@ string join_room(string room_id, string user_id, vector<Room> *rooms, vector<Use
 string bid(int price, string room_id, string user_id, vector<Room> *rooms);
 string buy_immediately(string room_id, string user_id, vector<Room> *rooms);
 string create_room(string user_id, string item_name, string item_description, int starting_price, int buy_immediately_price, vector<Room> *rooms, int *id_count);
-
+string leave_room(string room_id, string user_id, vector<Room> *rooms);
 
 
