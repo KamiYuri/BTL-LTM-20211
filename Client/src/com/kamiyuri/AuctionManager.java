@@ -1,6 +1,7 @@
 package com.kamiyuri;
 
 import com.kamiyuri.TCP.ConnectionThread;
+import com.kamiyuri.TCP.Delimiter;
 import com.kamiyuri.TCP.RequestFactory;
 import com.kamiyuri.TCP.RequestType;
 import com.kamiyuri.model.Account;
@@ -11,6 +12,7 @@ import javafx.scene.control.TreeItem;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.function.Consumer;
 
 public class AuctionManager {
@@ -31,7 +33,6 @@ public class AuctionManager {
                 roomResponse = response;
                 break;
             case CREATE_ROOM:
-                System.out.println(response);
                 createRoomResponse = response;
                 break;
         }
@@ -73,7 +74,15 @@ public class AuctionManager {
     }
 
     private void handleRoomsRespone(TreeItem<String> room) {
-        System.out.println(roomResponse);
+        Scanner roomsScanner = new Scanner(roomResponse.substring(2));
+        roomsScanner.useDelimiter(Delimiter.Two());
+        while(roomsScanner.hasNext()){
+            Scanner roomDataScanner = new Scanner(roomsScanner.next());
+            roomDataScanner.useDelimiter(Delimiter.Three());
+            while (roomDataScanner.hasNext()){
+                String t = roomDataScanner.next();
+            }
+        }
     }
 
     public void setAccount(Account account) {
@@ -119,7 +128,6 @@ public class AuctionManager {
 
         service.start();
         service.setOnSucceeded(event -> {
-            System.out.println(createRoomResponse);
         });
     }
 }
