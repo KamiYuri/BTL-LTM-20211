@@ -30,8 +30,8 @@ HANDLE hthread;
 
 vector<User> users;
 vector<Room> rooms;
-int user_id_count = 0;
-int room_id_count = 0;
+int user_id_count = 1;
+int room_id_count = 1;
 // data structure declaration
 
 void filter_request(string message, SOCKET client_socket);
@@ -331,10 +331,11 @@ void create_room_handler(
 
 		hthread = (HANDLE)_beginthreadex(0, 0, timer_thread, (void *)room_id_in_char, 0, 0); //start thread
 		rooms[room_index].timer_thread = hthread;
+		byte_stream_sender(client_socket, response.substr(0, delimiter_index));
 	}
 	else
 	{
-
+		byte_stream_sender(client_socket, response);
 	}
 
 };
