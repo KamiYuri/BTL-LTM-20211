@@ -30,20 +30,16 @@ string login(string email, string password, SOCKET client_socket, vector<User> *
 			string account = line.substr(0, space);
 			string pass = line.substr(space + 1);
 			if (email == account && password == pass) {
-				//them cac thong tin vao 1 tmp_user roi them vao vector
+				//add info to tmp_user then push to users vector
 				(*id_count)++;
 				User tmp_user;
 				tmp_user.user_id = to_string(*id_count);
-				//tmp_user.username = email;
-				//tmp_user.password = password;
 				tmp_user.socket = client_socket;
-				//strcpy_s(tmp_user.client_ip, client_ip);
-				//tmp_user.client_port = client_port;
 				(*users).push_back(tmp_user);
-				return SUCCESS_LOGIN + tmp_user.user_id + ENDING_DELIMITER;
+				return SUCCESS_LOGIN + tmp_user.user_id;
 			}
 		}
-		return string(FAILED_LOGIN) + ENDING_DELIMITER;
+		return FAILED_LOGIN;
 	}
 }
 
@@ -51,7 +47,7 @@ string logout(string user_id, vector<User> *users){
 	for (int i = 0; i < (*users).size(); i++) {
 		if ((*users)[i].user_id == user_id) {
 			(*users).erase((*users).begin()+i-1);
-			return string(SUCCESS_LOGOUT) + ENDING_DELIMITER;
+			return SUCCESS_LOGOUT;
 		}
 	}
 	return FAILED_LOGOUT;
@@ -60,9 +56,15 @@ string logout(string user_id, vector<User> *users){
 string show_room(vector<Room> *rooms) {
 	string message;
 	for (int i = 0;i<(*rooms).size();i++) {
-		message = SUCCESS_SHOW_ROOM + (*rooms)[i].room_id + SPLITING_DELIMITER_2 + (*rooms)[i].item_name + SPLITING_DELIMITER_1;
+		string current_price = to_string((*rooms)[i].current_price);
+		string buy_immediately_price = to_string((*rooms)[i].buy_immediately_price);
+		message = SUCCESS_SHOW_ROOM 
+				+ (*rooms)[i].room_id + SPLITING_DELIMITER_2 
+				+ (*rooms)[i].item_name + SPLITING_DELIMITER_2 
+				+ (*rooms)[i].item_description + SPLITING_DELIMITER_2 
+				+ current_price + SPLITING_DELIMITER_2 
+				+ buy_immediately_price + SPLITING_DELIMITER_1;
 	}
-	message += ENDING_DELIMITER;
 	return message;
 }
 
@@ -127,5 +129,9 @@ string create_room(string user_id, string item_name, string item_description, in
 		return SUCCESS_CREATE_ROOM + tmp_room.room_id + SPLITING_DELIMITER_1 + to_string((*rooms).size() - 1);
 	}
 	else return INVALID_INFORMATION;
+}
+
+string leave_room(string user_id, vector<Room> *rooms) {
+
 }
 
