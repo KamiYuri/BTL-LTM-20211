@@ -17,6 +17,7 @@
 #include <processthreadsapi.h>
 #pragma comment(lib, "Ws2_32.lib")
 
+#define  WSA_MAXIMUM_WAIT_EVENTS 2
 #define SERVER_ADDR "127.0.0.1"
 #define PORT 5500
 #define BUFF_SIZE 2048
@@ -52,15 +53,10 @@ int Send(SOCKET, char *, int, int);
 void byte_stream_sender(SOCKET client, string message);
 string byte_stream_receiver(string* message_queue, string received_message);
 unsigned __stdcall timer_thread(void *param);
+unsigned __stdcall worker_thread(void *param);
 
 int main(int argc, char* argv[])
 {
-	DWORD		nEvents = 0;
-	DWORD		index;
-	SOCKET		socks[WSA_MAXIMUM_WAIT_EVENTS];
-	WSAEVENT	events[WSA_MAXIMUM_WAIT_EVENTS];
-	WSANETWORKEVENTS sockEvent;
-
 	//Step 1: Initiate WinSock
 	WSADATA wsaData;
 	WORD wVersion = MAKEWORD(2, 2);
@@ -79,14 +75,6 @@ int main(int argc, char* argv[])
 	serverAddr.sin_port = htons(PORT);
 	inet_pton(AF_INET, SERVER_ADDR, &serverAddr.sin_addr);
 
-	socks[0] = listenSock;
-	events[0] = WSACreateEvent(); //create new events
-	nEvents++;
-
-	// Associate event types FD_ACCEPT and FD_CLOSE
-	// with the listening socket and newEvent   
-	WSAEventSelect(socks[0], events[0], FD_ACCEPT | FD_CLOSE);
-
 
 	if (bind(listenSock, (sockaddr *)&serverAddr, sizeof(serverAddr)))
 	{
@@ -102,14 +90,59 @@ int main(int argc, char* argv[])
 
 	printf("Server started!\n");
 
+
+	SOCKET param[2];
+	param[0] = listenSock;
+	param[1] = INVALID_SOCKET;
+
+	_beginthreadex(0, 0, worker_thread, (void*)param, 0, 0);
+	while (1) {
+		// keep the server loop 
+	}
+	return 0;
+}
+
+unsigned __stdcall worker_thread(void *param) {
+	DWORD		nEvents = 0;
+	DWORD		index;
+	SOCKET		socks[WSA_MAXIMUM_WAIT_EVENTS];
+	WSAEVENT	events[WSA_MAXIMUM_WAIT_EVENTS];
+	WSANETWORKEVENTS sockEvent;
+	int thread_capacity_is_full = 0;
+
 	SOCKET connSock;
 	sockaddr_in clientAddr;
 	int clientAddrLen = sizeof(clientAddr);
 	int ret, i;
+	//get listenSock from param
+	SOCKET listenSock = ((SOCKET*)param)[0];
+	//get connSock from param if exists( not equal INVALID_SOCKET)
+	if (((SOCKET*)param)[1] != INVALID_SOCKET)
+	{
+		SOCKET connSock = ((SOCKET*)param)[1];
+		//add connSock to array of client, then create an event and assign it to connSock with reading and closing event
+		socks[1] = connSock;
+		events[1] = WSACreateEvent();
+		cout << "Accept new client from " << endl;
+		WSAEventSelect(socks[1], events[1], FD_READ | FD_CLOSE);
+		nEvents++;
+	}
+	//set first element of client array with listenSock
+	socks[0]= listenSock;
+	events[0] = WSACreateEvent(); //create new events
+	nEvents++;
+
+	// Assign an event types FD_ACCEPT and FD_CLOSE
+	// with the listening socket and newEvent   
+	WSAEventSelect(socks[0], events[0], FD_ACCEPT | FD_CLOSE);
 
 	for (i = 1; i < WSA_MAXIMUM_WAIT_EVENTS; i++) {
+		if (i == 1 && ((SOCKET*)param)[1] != INVALID_SOCKET) 
+			continue;
 		socks[i] = 0;
 	}
+
+	HANDLE worker_thread_handler;
 	while (1) {
 		//wait for network events on all socket
 		index = WSAWaitForMultipleEvents(nEvents, events, FALSE, WSA_INFINITE, FALSE);
@@ -138,8 +171,16 @@ int main(int argc, char* argv[])
 			//Add new socket into socks array
 			int i;
 			if (nEvents == WSA_MAXIMUM_WAIT_EVENTS) {
-				printf("\nToo many clients.");
-				closesocket(connSock);
+				//check if there was no thread was created before
+				if (thread_capacity_is_full == 0)
+				{
+					SOCKET param[2];
+					param[0] = listenSock;
+					param[1] = connSock;
+					printf("Maximum clients reached: new worker thread will be created.\n");
+					thread_capacity_is_full = 1;
+					worker_thread_handler = (HANDLE)_beginthreadex(0, 0, worker_thread, (void*)param, 0, 0);
+				}
 			}
 			else {
 				socks[nEvents] = connSock;
@@ -174,14 +215,11 @@ int main(int argc, char* argv[])
 				events[index] = events[nEvents - 1];
 				nEvents--;
 			}
-			else {								
-				//echo to client
+			else {
 				recv_buff[ret] = 0;
 				string received_message = recv_buff;
 				string message = byte_stream_receiver(message_queue, received_message);
 				filter_request(message, socks[index]);
-				//memcpy(sendBuff, recvBuff, ret);
-				//Send(socks[index], sendBuff, ret, 0);
 
 				//reset event
 				WSAResetEvent(events[index]);
@@ -192,6 +230,7 @@ int main(int argc, char* argv[])
 			if (sockEvent.iErrorCode[FD_CLOSE_BIT] != 0) {
 				printf("FD_CLOSE failed with error %d\n", sockEvent.iErrorCode[FD_CLOSE_BIT]);
 			}
+			// logout handler here
 			//Release socket and event
 			closesocket(socks[index]);
 			socks[index] = 0;
@@ -199,7 +238,9 @@ int main(int argc, char* argv[])
 			nEvents--;
 		}
 	}
+	WaitForSingleObject(worker_thread_handler, INFINITE);
 	return 0;
+
 }
 
 unsigned __stdcall timer_thread(void *param) {
@@ -221,7 +262,6 @@ unsigned __stdcall timer_thread(void *param) {
 					if (ret == SOCKET_ERROR)
 					{
 						printf("Error %d: Cannot send data.\n", WSAGetLastError());
-						break;
 					}
 				}
 			}
@@ -409,9 +449,13 @@ void filter_request(string message, SOCKET client_socket) {
 	}
 	else if (method == "CREATE") {
 		int spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1);
-		string item_name = payload.substr(0, spliting_delimiter_index);
+		string user_id = payload.substr(0, spliting_delimiter_index);
 
 		int pre_delimiter_index = spliting_delimiter_index;
+		spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1, pre_delimiter_index + 2);
+		string item_name = payload.substr(pre_delimiter_index + 2, spliting_delimiter_index - pre_delimiter_index - 2);
+
+		pre_delimiter_index = spliting_delimiter_index;
 		spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1, pre_delimiter_index + 2);
 		string item_description = payload.substr(pre_delimiter_index + 2, spliting_delimiter_index - pre_delimiter_index - 2);
 
