@@ -10,12 +10,12 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class TCP{
-    private Socket connSocket;
-    private String serverIp = "127.0.0.1";
-    private short serverPort = 5500;
+    private final Socket connSocket;
+    private final String serverIp = "127.0.0.1";
+    private final short serverPort = 5500;
 
-    private PrintWriter out;
-    private BufferedReader in;
+    private final PrintWriter out;
+    private final BufferedReader in;
 
     public TCP() throws IOException {
         connSocket = new Socket(serverIp, serverPort);

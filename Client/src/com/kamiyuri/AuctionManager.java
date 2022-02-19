@@ -7,12 +7,32 @@ import com.kamiyuri.model.RoomTreeItem;
 import javafx.scene.control.TreeItem;
 
 import java.io.IOException;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 public class AuctionManager {
-    private ConnectionThread connectionThread;
+    private final ConnectionThread connectionThread;
+    private final RoomTreeItem<String> root = new RoomTreeItem<>("");
     private Account account;
     private String loginResponse, logoutResponse, refreshResponse;
+    Consumer<String> getResponseCallback = response -> {
+        RequestType code = RequestType.values()[Character.getNumericValue(response.charAt(0)) - 1];
+
+        switch (code) {
+            case LOGIN:
+                loginResponse = response;
+                break;
+            case LOGOUT:
+                if (response.charAt(1) == '1') {
+                    logoutResponse = "";
+                }
+                logoutResponse = "1";
+                break;
+            case REFRESH:
+                if (response != refreshResponse) {
+                    refreshResponse = response;
+                }
+        }
+    };
 
     public AuctionManager() throws IOException {
         this.connectionThread = new ConnectionThread();
@@ -21,34 +41,8 @@ public class AuctionManager {
     }
 
     private void setupConnectionThread() {
-        connectionThread.setResponseCallback(response -> {
-            System.out.println(response);
-            RequestType code = RequestType.values()[Character.getNumericValue(response.charAt(0)) - 1];
-
-            switch (code) {
-                case LOGIN:
-                    System.out.println(response);
-                    if (response.charAt(1) == '1') {
-                        loginResponse = "";
-                    }
-                    loginResponse = response.substring(2).replace("\r\n", "");
-                    break;
-                case LOGOUT:
-                    if (response.charAt(1) == '1') {
-                        logoutResponse = "";
-                    }
-                    logoutResponse = "1";
-                    break;
-                case REFRESH:
-                    if (response != refreshResponse){
-                        System.out.println(response);
-                        refreshResponse = response;
-                    }
-            }
-        });
+        this.connectionThread.setResponseCallback(this.getResponseCallback);
     }
-
-    private RoomTreeItem<String> root = new RoomTreeItem<>("");
 
     public TreeItem<String> getRoomsRoot() {
         return this.root;

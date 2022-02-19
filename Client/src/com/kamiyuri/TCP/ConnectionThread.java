@@ -11,12 +11,12 @@ import java.util.function.Function;
 
 public class ConnectionThread implements Runnable{
     private Thread thread;
-    private Socket connSocket;
-    private String serverIp = "127.0.0.1";
-    private short serverPort = 5500;
+    private final Socket connSocket;
+    private final String serverIp = "127.0.0.1";
+    private final short serverPort = 5500;
 
-    private PrintWriter out;
-    private BufferedReader in;
+    private final PrintWriter out;
+    private final BufferedReader in;
 
     Consumer<String> getResponseCallback;
 
@@ -36,12 +36,12 @@ public class ConnectionThread implements Runnable{
     @Override
     public void run() {
         Scanner scanner = new Scanner(this.in);
-        scanner.useDelimiter(Delimiter.One());
+        scanner.useDelimiter("\r\n");
 
         String response = "";
         while (true){
             response = scanner.next();
-            getResponseCallback.accept(response);
+            this.getResponseCallback.accept(response);
         }
     }
 

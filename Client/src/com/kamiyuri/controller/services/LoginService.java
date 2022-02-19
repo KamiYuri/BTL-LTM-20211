@@ -32,16 +32,22 @@ public class LoginService extends Service<LoginResult> {
     }
 
     private LoginResult login(){
-        String request = RequestFactory.getRequest(LOGIN, account.getData());
+        String request = RequestFactory.getRequest(LOGIN, account.getData()); //requse
         auctionManager.sendRequest(request);
+        String response;
+        do {
+            response = auctionManager.getLoginResponse();
+        } while (response == null);
 
-        String response = auctionManager.getLoginResponse();
+
         if (response.isEmpty()){
             return LoginResult.FAILED_BY_UNEXPECTED_ERROR;
-        } else {
-            account.setUserId(response);
-            auctionManager.setAccount(account);
+        } else if (response.charAt(1) == '1'){
+            return LoginResult.FAILED_BY_CREDENTIALS;
         }
+
+        account.setUserId(response.substring(2));
+        auctionManager.setAccount(account);
         return LoginResult.SUCCESS;
     }
 }
