@@ -1,9 +1,12 @@
 package com.kamiyuri;
 
 import com.kamiyuri.TCP.ConnectionThread;
+import com.kamiyuri.TCP.RequestFactory;
 import com.kamiyuri.TCP.RequestType;
 import com.kamiyuri.model.Account;
 import com.kamiyuri.model.RoomTreeItem;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 
 import java.io.IOException;
@@ -13,7 +16,7 @@ public class AuctionManager {
     private final ConnectionThread connectionThread;
     private final RoomTreeItem<String> root = new RoomTreeItem<>("");
     private Account account;
-    private String loginResponse, logoutResponse, refreshResponse;
+    private String loginResponse, logoutResponse, refreshResponse, roomResponse;
     Consumer<String> getResponseCallback = response -> {
         RequestType code = RequestType.values()[Character.getNumericValue(response.charAt(0)) - 1];
 
@@ -28,9 +31,9 @@ public class AuctionManager {
                 logoutResponse = "1";
                 break;
             case REFRESH:
-                if (response != refreshResponse) {
-                    refreshResponse = response;
-                }
+                refreshResponse = response;
+            case SHOW_ROOM:
+                roomResponse = response;
         }
     };
 
@@ -49,7 +52,31 @@ public class AuctionManager {
     }
 
     public void getRooms(TreeItem<String> room) {
+        Service service = new Service() {
+            @Override
+            protected Task createTask() {
+                return new Task<>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        String request = RequestFactory.getRequest(RequestType.SHOW_ROOM, null);
+                        sendRequest(request);
 
+                        String response;
+                        response = roomResponse;
+                        return null;
+                    }
+                };
+            }
+        };
+
+        service.start();
+        service.setOnSucceeded(event -> {
+            handleRoomsRespone(room);
+        });
+    }
+
+    private void handleRoomsRespone(TreeItem<String> room) {
+        System.out.println(roomResponse);
     }
 
     public void getUserRooms(TreeItem<String> userRoom) {

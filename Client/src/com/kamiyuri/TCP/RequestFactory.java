@@ -13,7 +13,7 @@ public class RequestFactory {
             case LOGOUT:
                 return createLogoutRequest(data);
             case SHOW_ROOM:
-                return createShowRoomRequest(data);
+                return createShowRoomRequest();
             case JOIN_ROOM:
                 return createJoinRoomRequest(data);
             case BID:
@@ -43,7 +43,7 @@ public class RequestFactory {
         return "JOIN__" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("roomId") + Delimiter.One();
     }
 
-    private static String createShowRoomRequest(Properties data) {
+    private static String createShowRoomRequest() {
         return "SHOW__" + Delimiter.One();
     }
 

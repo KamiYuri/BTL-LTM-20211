@@ -21,12 +21,7 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Edit">
             <items>
-              <MenuItem mnemonicParsing="false" onAction="#createRoomAction" text="Create new room" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Help">
-            <items>
-              <MenuItem mnemonicParsing="false" text="About" />
+              <MenuItem mnemonicParsing="false" onAction="#createRoomAction" text="Tạo phòng mới" />
             </items>
           </Menu>
         </menus>
