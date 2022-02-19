@@ -130,8 +130,8 @@ string create_room(string user_id, string item_name, string item_description, in
 	}
 	else return INVALID_INFORMATION;
 }
-
+ /*
 string leave_room(string user_id, vector<Room> *rooms) {
 
-}
+} */
 
