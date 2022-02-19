@@ -48,6 +48,8 @@ void create_room_handler(
 	int starting_price,
 	int buy_immediately_price,
 	SOCKET client_socket);
+void leave_room_handler(string room_id, string user_id, SOCKET client_socket);
+
 int Receive(SOCKET, char *, int, int);
 int Send(SOCKET, char *, int, int);
 void byte_stream_sender(SOCKET client, string message);
@@ -339,6 +341,11 @@ void create_room_handler(
 	}
 
 };
+
+void leave_room_handler(string room_id, string user_id, SOCKET client_socket) {
+	string message = leave_room(room_id, user_id, &rooms);
+	byte_stream_sender(client_socket, message);
+}
 
 string byte_stream_receiver(string* message_queue, string received_message) {
 	*message_queue = *message_queue + received_message;

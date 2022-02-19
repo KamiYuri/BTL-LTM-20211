@@ -58,13 +58,14 @@ string show_room(vector<Room> *rooms) {
 	for (int i = 0;i<(*rooms).size();i++) {
 		string current_price = to_string((*rooms)[i].current_price);
 		string buy_immediately_price = to_string((*rooms)[i].buy_immediately_price);
-		message = SUCCESS_SHOW_ROOM 
+		message = message
 				+ (*rooms)[i].room_id + SPLITING_DELIMITER_2 
 				+ (*rooms)[i].item_name + SPLITING_DELIMITER_2 
 				+ (*rooms)[i].item_description + SPLITING_DELIMITER_2 
 				+ current_price + SPLITING_DELIMITER_2 
 				+ buy_immediately_price + SPLITING_DELIMITER_1;
 	}
+	message = SUCCESS_SHOW_ROOM + message;
 	return message;
 }
 
@@ -130,8 +131,18 @@ string create_room(string user_id, string item_name, string item_description, in
 	}
 	else return INVALID_INFORMATION;
 }
- /*
-string leave_room(string user_id, vector<Room> *rooms) {
 
-} */
+string leave_room(string room_id, string user_id, vector<Room> *rooms) {
+	for (int i = 0; i < (*rooms).size(); i++) {
+		if ((*rooms)[i].room_id == room_id) {
+			for (int j = 0; j < ((*rooms)[i].client_list).size(); j++) {
+				if (((*rooms)[i].client_list)[j].user_id == user_id) {
+					((*rooms)[i].client_list).erase(((*rooms)[i].client_list).begin() + j);
+					return SUCCESS_LEAVE_ROOM;
+				}
+			}
+		}
+	}
+	return ROOM_ID_NOT_FOUND;
+}
 

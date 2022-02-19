@@ -1,17 +1,26 @@
 package com.kamiyuri.controller;
 
 import com.kamiyuri.AuctionManager;
+import com.kamiyuri.TCP.RequestType;
 import com.kamiyuri.model.Room;
 import com.kamiyuri.view.ViewFactory;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ResourceBundle;
 
 public class MainWindowController extends BaseController implements Initializable {
@@ -47,17 +56,35 @@ public class MainWindowController extends BaseController implements Initializabl
 
     @FXML
     void bidBtnAction() {
-
+        showPopup(RequestType.BID);
     }
 
     @FXML
     void buyBtnAction() {
-
+        showPopup(RequestType.BUY);
     }
 
     @FXML
     void createRoomAction() {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("CreateRoomWindow.fxml"));
+        fxmlLoader.setController(new CreateRoomWindowController(auctionManager));
+        Parent parent;
+        try {
+            parent = fxmlLoader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        Scene scene = new Scene(parent);
+        Stage stage = new Stage();
 
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initOwner(roomIdLabel.getScene().getWindow().getScene().getWindow());
+
+        stage.setScene(scene);
+        stage.setResizable(false);
+
+        stage.show();
     }
 
     @FXML
@@ -99,10 +126,7 @@ public class MainWindowController extends BaseController implements Initializabl
     private void setUpTreeView() {
         TreeItem<String> room = new TreeItem<>("Room");
         room.setExpanded(true);
-        room.getChildren().add(new TreeItem<>("a"));
-        room.getChildren().add(new TreeItem<>("b"));
-        room.getChildren().add(new TreeItem<>("c"));
-//        auctionManager.getRooms(room);
+        auctionManager.getRooms(room);
         roomTreeView.setRoot(room);
         roomTreeView.setShowRoot(false);
 
@@ -140,5 +164,27 @@ public class MainWindowController extends BaseController implements Initializabl
         );
 
        return room;
+    }
+
+    private void showPopup(RequestType type){
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("popup.fxml"));
+        fxmlLoader.setController(new Popup(type, auctionManager));
+        Parent parent;
+        try {
+            parent = fxmlLoader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        Scene scene = new Scene(parent);
+        Stage stage = new Stage();
+
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initOwner(roomIdLabel.getScene().getWindow().getScene().getWindow());
+
+        stage.setScene(scene);
+        stage.setResizable(false);
+
+        stage.showAndWait();
     }
 }
