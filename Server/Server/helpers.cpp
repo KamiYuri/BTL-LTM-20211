@@ -75,6 +75,7 @@ string join_room(string room_id, string user_id, vector<Room> *rooms, vector<Use
 			for (int j = 0; j < (*users).size(); j++) {
 				if (user_id == (*users)[j].user_id) {
 					(*rooms)[i].client_list.push_back((*users)[j]);
+					(*users)[j].joined_room_id = room_id;
 					if ((*rooms)[i].owner == "-1") return SUCCESS_JOIN_ROOM;
 					else return ROOM_CLOSED + (*rooms)[i].owner + SPLITING_DELIMITER_1 + to_string((*rooms)[i].current_price);
 				}
@@ -140,6 +141,7 @@ string leave_room(string room_id, string user_id, vector<Room> *rooms) {
 			for (int j = 0; j < ((*rooms)[i].client_list).size(); j++) {
 				if (((*rooms)[i].client_list)[j].user_id == user_id) {
 					((*rooms)[i].client_list).erase(((*rooms)[i].client_list).begin() + j);
+					((*rooms)[i].client_list)[j].joined_room_id = "-1";
 					return SUCCESS_LEAVE_ROOM;
 				}
 			}
