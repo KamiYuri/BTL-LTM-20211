@@ -63,7 +63,7 @@ string show_room(vector<Room> *rooms) {
 				+ (*rooms)[i].item_name + SPLITING_DELIMITER_2 
 				+ (*rooms)[i].item_description + SPLITING_DELIMITER_2 
 				+ current_price + SPLITING_DELIMITER_2 
-				+ buy_immediately_price + SPLITING_DELIMITER_1;
+				+ buy_immediately_price + SPLITING_DELIMITER_2 + SPLITING_DELIMITER_1;
 	}
 	message = SUCCESS_SHOW_ROOM + message;
 	return message;
@@ -75,7 +75,8 @@ string join_room(string room_id, string user_id, vector<Room> *rooms, vector<Use
 			for (int j = 0; j < (*users).size(); j++) {
 				if (user_id == (*users)[j].user_id) {
 					(*rooms)[i].client_list.push_back((*users)[j]);
-					return SUCCESS_JOIN_ROOM;
+					if ((*rooms)[i].owner == "-1") return SUCCESS_JOIN_ROOM;
+					else return ROOM_CLOSED + (*rooms)[i].owner + SPLITING_DELIMITER_1 + to_string((*rooms)[i].current_price);
 				}
 			}
 		}
@@ -123,6 +124,7 @@ string create_room(string user_id, string item_name, string item_description, in
 	tmp_room.item_description = item_description;
 	tmp_room.starting_price = starting_price;
 	tmp_room.buy_immediately_price = buy_immediately_price;
+	tmp_room.current_price = starting_price;
 	if (tmp_room.starting_price > 0 && tmp_room.buy_immediately_price > tmp_room.starting_price) {
 		(*id_count)++;
 		tmp_room.room_id = to_string(*id_count);
