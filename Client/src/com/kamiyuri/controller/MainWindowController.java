@@ -67,7 +67,7 @@ public class MainWindowController extends BaseController implements Initializabl
     @FXML
     void createRoomAction() {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("CreateRoomWindow.fxml"));
-        fxmlLoader.setController(new CreateRoomWindowController());
+        fxmlLoader.setController(new CreateRoomWindowController(auctionManager));
         Parent parent;
         try {
             parent = fxmlLoader.load();

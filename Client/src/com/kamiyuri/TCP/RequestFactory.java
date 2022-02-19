@@ -28,7 +28,7 @@ public class RequestFactory {
     }
 
     private static String createCreateRoomRequest(Properties data) {
-        return "CREATE" + data.getProperty("itemName") + Delimiter.Two() + data.getProperty("itemDescription")  + data.getProperty("startingPrice") + Delimiter.Two() + data.getProperty("buyImmediatelyPrice") + Delimiter.One();
+        return "CREATE" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("itemName") + Delimiter.Two() + data.getProperty("itemDescription") + Delimiter.Two()  + data.getProperty("itemStartPrice") + Delimiter.Two() + data.getProperty("itemBuyPrice") + Delimiter.One();
     }
 
     private static String createBuyRequest(Properties data) {

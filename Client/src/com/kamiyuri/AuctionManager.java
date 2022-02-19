@@ -10,13 +10,14 @@ import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 
 import java.io.IOException;
+import java.util.Properties;
 import java.util.function.Consumer;
 
 public class AuctionManager {
     private final ConnectionThread connectionThread;
     private final RoomTreeItem<String> root = new RoomTreeItem<>("");
     private Account account;
-    private String loginResponse, logoutResponse, refreshResponse, roomResponse;
+    private String loginResponse, logoutResponse, roomResponse, createRoomResponse;
     Consumer<String> getResponseCallback = response -> {
         RequestType code = RequestType.values()[Character.getNumericValue(response.charAt(0)) - 1];
 
@@ -25,15 +26,14 @@ public class AuctionManager {
                 loginResponse = response;
                 break;
             case LOGOUT:
-                if (response.charAt(1) == '1') {
-                    logoutResponse = "";
-                }
-                logoutResponse = "1";
+
                 break;
-            case REFRESH:
-                refreshResponse = response;
             case SHOW_ROOM:
                 roomResponse = response;
+                break;
+            case CREATE_ROOM:
+                createRoomResponse = response;
+                break;
         }
     };
 
@@ -60,9 +60,6 @@ public class AuctionManager {
                     protected Void call() throws Exception {
                         String request = RequestFactory.getRequest(RequestType.SHOW_ROOM, null);
                         sendRequest(request);
-
-                        String response;
-                        response = roomResponse;
                         return null;
                     }
                 };
@@ -77,10 +74,6 @@ public class AuctionManager {
 
     private void handleRoomsRespone(TreeItem<String> room) {
         System.out.println(roomResponse);
-    }
-
-    public void getUserRooms(TreeItem<String> userRoom) {
-
     }
 
     public void setAccount(Account account) {
@@ -105,5 +98,28 @@ public class AuctionManager {
 
     public String getLogoutResponse() {
         return logoutResponse;
+    }
+
+    public void createRoom(Properties data) {
+        data.put("userId", account.getUserId());
+
+        Service service = new Service() {
+            @Override
+            protected Task createTask() {
+                return new Task() {
+                    @Override
+                    protected Object call() throws Exception {
+                        String request = RequestFactory.getRequest(RequestType.CREATE_ROOM, data);
+                        sendRequest(request);
+                        return null;
+                    }
+                };
+            }
+        };
+
+        service.start();
+        service.setOnSucceeded(event -> {
+            System.out.println(createRoomResponse);
+        });
     }
 }
