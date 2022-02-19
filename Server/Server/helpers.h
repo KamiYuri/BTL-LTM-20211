@@ -12,6 +12,7 @@ struct User {
 	//string username;
 	//string password;
 	SOCKET socket;
+	string joined_room_id = "-1";
 	//char client_ip[INET_ADDRSTRLEN];
 	//int client_port;
 };
