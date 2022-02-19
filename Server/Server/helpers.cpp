@@ -54,7 +54,7 @@ string logout(string user_id, vector<User> *users){
 }
 
 string show_room(vector<Room> *rooms) {
-	string message;
+	string message ="";
 	for (int i = 0;i<(*rooms).size();i++) {
 		string current_price = to_string((*rooms)[i].current_price);
 		string buy_immediately_price = to_string((*rooms)[i].buy_immediately_price);

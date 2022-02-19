@@ -49,6 +49,7 @@ void create_room_handler(
 	int buy_immediately_price,
 	SOCKET client_socket);
 void leave_room_handler(string room_id, string user_id, SOCKET client_socket);
+void server_notification(string room_id, string message);
 
 int Receive(SOCKET, char *, int, int);
 int Send(SOCKET, char *, int, int);
@@ -248,28 +249,31 @@ unsigned __stdcall worker_thread(void *param) {
 unsigned __stdcall timer_thread(void *param) {
 	int count = 0;
 	string room_id = (char *)param;
-	while (1) {
-		int test_time = 10000;
+	while (count < 3) {
+		int test_time = 60000;
 		Sleep(test_time);
-		for (int i = 0;i < rooms.size();i++) {
-			if (rooms[i].room_id == room_id)
-			{
-				vector<User> participants = rooms[i].client_list;
-				for (int j = 0;j < participants.size();j++) {
-					string message = "user id: " + rooms[i].current_highest_user +
-						"+ current price: " + to_string(rooms[i].current_price) +
-						"+ participants number:" + to_string(participants.size());
-					strcpy_s(buff, message.length() + 1, &message[0]);
-					ret = send(participants[j].socket, buff, strlen(buff), 0);
-					if (ret == SOCKET_ERROR)
-					{
-						printf("Error %d: Cannot send data.\n", WSAGetLastError());
-					}
-				}
-			}
+		count++;
+		string message = TIME_NOTIFICATION + to_string(3 - count);
+		server_notification(room_id, message);
+	}
+
+	// set user_id as an owner when the time is over
+	for (int i = 0;i < rooms.size();i++)
+		if (rooms[i].room_id == room_id)
+			rooms[i].owner = rooms[i].current_highest_user;
+
+	return 0;
+}
+
+void server_notification(string room_id, string message) {
+	for (int i = 0;i < rooms.size();i++) {
+		if (rooms[i].room_id == room_id) {
+			vector<User> participants = rooms[i].client_list;
+			for (int j = 0;j < participants.size();j++)
+				byte_stream_sender(participants[j].socket, message);
 		}
 	}
-	return 0;
+
 }
 
 void log_in_handler(string email, string password, SOCKET client_socket) {
@@ -300,11 +304,10 @@ void bid_handler(int price, string room_id, string user_id, SOCKET client_socket
 		rooms[room_index].timer_thread = hthread;
 
 		byte_stream_sender(client_socket, message);
-		if (ret == SOCKET_ERROR)
-			printf("Error %d", WSAGetLastError());
+		server_notification(room_id, NEW_PRICE_NOTIFICATION + to_string(price));
 	}
 	else {
-
+		byte_stream_sender(client_socket, message);
 	}
 };
 void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket) {
@@ -472,5 +475,11 @@ void filter_request(string message, SOCKET client_socket) {
 		int starting_price = stoi(payload.substr(pre_delimiter_index + 2, spliting_delimiter_index - pre_delimiter_index - 2));
 		int buy_immediately_price = stoi(payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2));
 		create_room_handler(user_id, item_name, item_description, starting_price, buy_immediately_price, client_socket);
+	}
+	else if (method == "LEAVE_") {
+		int spliting_delimiter_index = payload.find(SPLITING_DELIMITER_1);
+		string user_id = payload.substr(0, spliting_delimiter_index);
+		string room_id = payload.substr(spliting_delimiter_index + 2, payload.length() - spliting_delimiter_index - 2);
+		leave_room_handler(room_id, user_id, client_socket);
 	}
 }
