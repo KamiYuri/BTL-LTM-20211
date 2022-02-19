@@ -349,7 +349,7 @@ void create_room_handler(
 };
 
 void leave_room_handler(string room_id, string user_id, SOCKET client_socket) {
-	string message = leave_room(room_id, user_id, &rooms);
+	string message = leave_room(room_id, user_id, &rooms, &users);
 	byte_stream_sender(client_socket, message);
 }
 
