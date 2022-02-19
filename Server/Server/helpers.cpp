@@ -146,7 +146,7 @@ string leave_room(string room_id, string user_id, vector<Room> *rooms, vector<Us
 			}
 		}
 	}
-	for (int i = 0; i < (*users).size; i++) {
+	for (int i = 0; i < (*users).size(); i++) {
 		if ((*users)[i].user_id == user_id) {
 			(*users)[i].joined_room_id = "-1";
 		}
