@@ -17,7 +17,7 @@
 #include <processthreadsapi.h>
 #pragma comment(lib, "Ws2_32.lib")
 
-#define  WSA_MAXIMUM_WAIT_EVENTS 2
+//#define  WSA_MAXIMUM_WAIT_EVENTS 2
 #define SERVER_ADDR "127.0.0.1"
 #define PORT 5500
 #define BUFF_SIZE 2048

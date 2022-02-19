@@ -38,5 +38,8 @@ public class CreateRoomWindowController {
         data.put("itemBuyPrice", itemBuyField.getText());
 
         auctionManager.createRoom(data);
+
+        Stage stage = (Stage) itemNameField.getScene().getWindow();
+        stage.close();
     }
 }

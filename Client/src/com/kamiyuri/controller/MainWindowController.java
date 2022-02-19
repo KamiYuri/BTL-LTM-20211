@@ -21,6 +21,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 public class MainWindowController extends BaseController implements Initializable {
 
@@ -61,12 +62,16 @@ public class MainWindowController extends BaseController implements Initializabl
 
     @FXML
     void bidBtnAction() {
-        showPopup(RequestType.BID);
+        Popup popupController = new Popup(RequestType.BID, auctionManager);
+        popupController.setCallback(price -> auctionManager.bid(price));
+        showPopup(RequestType.BID, popupController);
     }
 
     @FXML
     void buyBtnAction() {
-        showPopup(RequestType.BUY);
+        Popup popupController = new Popup(RequestType.BUY, auctionManager);
+        popupController.setCallback(unused -> auctionManager.buy());
+        showPopup(RequestType.BUY, popupController);
     }
 
     @FXML
@@ -127,6 +132,9 @@ public class MainWindowController extends BaseController implements Initializabl
         roomTreeView.setRoot(room);
         roomTreeView.setShowRoot(false);
 
+        auctionManager.setRoot(roomTreeView.getRoot());
+
+
         roomTreeView.setOnMouseClicked(event -> {
             RoomTreeItem<String> item = (RoomTreeItem<String>) roomTreeView.getSelectionModel().getSelectedItem();
             if (item != null) {
@@ -146,9 +154,9 @@ public class MainWindowController extends BaseController implements Initializabl
 
     }
 
-    private void showPopup(RequestType type) {
+    private void showPopup(RequestType type, Popup popupController) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("popup.fxml"));
-        fxmlLoader.setController(new Popup(type, auctionManager));
+        fxmlLoader.setController(popupController);
         Parent parent;
         try {
             parent = fxmlLoader.load();
@@ -164,6 +172,10 @@ public class MainWindowController extends BaseController implements Initializabl
 
         stage.setScene(scene);
         stage.setResizable(false);
+
+        if(type == RequestType.BID){
+            popupController.set();
+        }
 
         stage.showAndWait();
     }

@@ -5,32 +5,58 @@ import com.kamiyuri.TCP.RequestType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 public class Popup implements Initializable {
     private String content;
     @FXML
     private Label contentLabel;
 
+    @FXML
+    private TextField bidField;
+
+    @FXML
+    private Label bidLabel;
+
+    private Consumer<String> callback;
+
+    public void setCallback(Consumer<String> callback) {
+        this.callback = callback;
+    }
+
     public Popup(RequestType type, AuctionManager auctionManager) {
         switch (type) {
             case BID:
                 content = "đấu giá";
-            case BUY:
+                break;
+            case BUY: {
                 content = "mua";
+                break;
+            }
         }
     }
 
     @FXML
-    void cancelBtnAction() {
+    void submitBtnAction() {
+        Stage stage = (Stage)bidLabel.getScene().getWindow();
+        callback.accept(bidField.getText());
+        stage.close();
 
     }
-
     @FXML
-    void submitBtnAction() {
+    void cancelBtnAction() {
+        Stage stage = (Stage) contentLabel.getScene().getWindow();
+        stage.close();
+    }
 
+    public void set(){
+        bidLabel.setVisible(true);
+        bidField.setVisible(true);
     }
 
     @Override
