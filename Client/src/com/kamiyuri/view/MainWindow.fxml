@@ -12,23 +12,23 @@
 
 <AnchorPane prefHeight="273.0" prefWidth="606.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <MenuBar layoutY="2.0" prefHeight="25.0" prefWidth="605.0">
+      <MenuBar layoutY="2.0" prefHeight="25.0" prefWidth="611.0">
         <menus>
           <Menu mnemonicParsing="false" text="Tuỳ chọn">
             <items>
               <MenuItem mnemonicParsing="false" onAction="#logoutAction" text="Đăng xuất" />
             </items>
           </Menu>
-          <Menu mnemonicParsing="false" text="Edit">
+          <Menu mnemonicParsing="false" text="Chỉnh sửa">
             <items>
               <MenuItem mnemonicParsing="false" onAction="#createRoomAction" text="Tạo phòng mới" />
             </items>
           </Menu>
         </menus>
       </MenuBar>
-      <AnchorPane fx:id="roomPane" layoutX="201.0" layoutY="63.0" prefHeight="218.0" prefWidth="402.0" style="-fx-border-style: solid; -fx-border-width: 2 0 0 2;">
+      <AnchorPane fx:id="roomPane" layoutX="201.0" layoutY="27.0" prefHeight="290.0" prefWidth="410.0" style="-fx-border-style: solid; -fx-border-width: 0 0 0 2;">
          <children>
-            <AnchorPane layoutY="40.0" prefHeight="120.0" prefWidth="200.0" style="-fx-border-style: solid; -fx-border-width: 1 1 1 0;">
+            <AnchorPane layoutX="2.0" layoutY="87.0" prefHeight="147.0" prefWidth="201.0" style="-fx-border-style: solid; -fx-border-width: 1 1 1 0;">
                <children>
                   <Label fx:id="itemNameLabel" alignment="TOP_LEFT" prefHeight="60.0" prefWidth="200.0" text="Tên vật phẩm: Laptop ASUS ROG Zephyrus M16" textOverrun="CLIP" wrapText="true">
                      <padding>
@@ -42,7 +42,7 @@
                   </Label>
                </children>
             </AnchorPane>
-            <AnchorPane layoutX="200.0" layoutY="40.0" prefHeight="122.0" prefWidth="203.0" style="-fx-border-style: solid; -fx-border-width: 1 0 1 0;">
+            <AnchorPane layoutX="201.0" layoutY="87.0" prefHeight="147.0" prefWidth="203.0" style="-fx-border-style: solid; -fx-border-width: 1 0 1 0;">
                <children>
                   <Label fx:id="itemCurrentPriceLabel" layoutX="2.0" prefHeight="17.0" prefWidth="200.0" text="Giá hiện tại: 999999999 VNĐ" textOverrun="CLIP" wrapText="true">
                      <padding>
@@ -56,17 +56,20 @@
                   </Label>
                </children>
             </AnchorPane>
-            <Label fx:id="roomIdLabel" alignment="CENTER" layoutX="42.0" layoutY="14.0" text="Phòng số 1" />
-            <Label fx:id="soldLabel" alignment="CENTER" layoutX="3.0" layoutY="183.0" prefHeight="17.0" prefWidth="400.0" text="Vật phẩm đã được bán" visible="false" />
-            <Label fx:id="noticLabel" alignment="CENTER" layoutX="202.0" layoutY="14.0" prefHeight="17.0" prefWidth="200.0" text="Thời gian còn lại: 2 phút" visible="false" />
-            <Button fx:id="bidBtn" layoutX="72.0" layoutY="179.0" mnemonicParsing="false" onAction="#bidBtnAction" text="Đấu giá" />
-            <Button fx:id="buyBtn" layoutX="280.0" layoutY="179.0" mnemonicParsing="false" onAction="#buyBtnAction" text="Mua" />
+            <Label fx:id="roomIdLabel" alignment="CENTER" layoutY="14.0" prefHeight="26.0" prefWidth="408.0" text="Phòng số 1">
+               <font>
+                  <Font name="System Bold" size="17.0" />
+               </font></Label>
+            <Label fx:id="soldLabel" alignment="CENTER" layoutX="3.0" layoutY="38.0" prefHeight="41.0" prefWidth="200.0" text="Đã kết thúc đấu giá và có người đã mua được vật phẩm." textAlignment="CENTER" visible="false" wrapText="true" />
+            <Label fx:id="noticLabel" alignment="CENTER" layoutX="202.0" layoutY="50.0" prefHeight="17.0" prefWidth="200.0" text="Thời gian còn lại: 2 phút" visible="false" />
+            <Button fx:id="bidBtn" layoutX="74.0" layoutY="251.0" mnemonicParsing="false" onAction="#bidBtnAction" text="Đấu giá" />
+            <Button fx:id="buyBtn" layoutX="283.0" layoutY="251.0" mnemonicParsing="false" onAction="#buyBtnAction" text="Mua" />
          </children></AnchorPane>
-      <TreeView fx:id="roomTreeView" layoutX="1.0" layoutY="63.0" prefHeight="162.0" prefWidth="200.0" style="-fx-border-style: solid; -fx-border-width: 2 0 0 0;" />
+      <TreeView fx:id="roomTreeView" layoutX="1.0" layoutY="63.0" prefHeight="198.0" prefWidth="200.0" style="-fx-border-style: solid; -fx-border-width: 2 0 0 0;" />
       <Label layoutX="54.0" layoutY="35.0" text="Danh sách phòng" AnchorPane.topAnchor="35.0" />
       <Label fx:id="userNameLabel" layoutX="403.0" layoutY="6.0" text="Tài khoản: abc" />
       <Label fx:id="userIdLabel" layoutX="509.0" layoutY="6.0" text="Mã tài khoản: 1" />
-      <Button fx:id="refreshBtnAction" layoutX="73.0" layoutY="243.0" mnemonicParsing="false" onAction="#refreshRoomsAction" text="Làm mới">
+      <Button fx:id="refreshBtnAction" layoutX="73.0" layoutY="279.0" mnemonicParsing="false" onAction="#refreshRoomsAction" text="Làm mới">
          <font>
             <Font size="11.0" />
          </font>

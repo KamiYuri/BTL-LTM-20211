@@ -126,6 +126,7 @@ public class MainWindowController extends BaseController implements Initializabl
         setUpUserInf();
         setUpTreeView();
         auctionManager.setLockBidCallback(lockBid);
+        auctionManager.setNoticCallback(setNotic);
     }
 
     private void setUpRoomPane() {
@@ -195,6 +196,11 @@ public class MainWindowController extends BaseController implements Initializabl
 
         stage.showAndWait();
     }
+
+    private Consumer<String> setNotic = str -> {
+        soldLabel.setVisible(true);
+        soldLabel.setText(str);
+    };
 
     private Consumer<String> lockBid = str -> {
         if(str.equals("SUCCESS")){
