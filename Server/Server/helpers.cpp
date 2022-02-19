@@ -54,7 +54,7 @@ string logout(string user_id, vector<User> *users){
 }
 
 string show_room(vector<Room> *rooms) {
-	string message;
+	string message ="";
 	for (int i = 0;i<(*rooms).size();i++) {
 		string current_price = to_string((*rooms)[i].current_price);
 		string buy_immediately_price = to_string((*rooms)[i].buy_immediately_price);
@@ -63,7 +63,7 @@ string show_room(vector<Room> *rooms) {
 				+ (*rooms)[i].item_name + SPLITING_DELIMITER_2 
 				+ (*rooms)[i].item_description + SPLITING_DELIMITER_2 
 				+ current_price + SPLITING_DELIMITER_2 
-				+ buy_immediately_price + SPLITING_DELIMITER_1;
+				+ buy_immediately_price + SPLITING_DELIMITER_2 + SPLITING_DELIMITER_1;
 	}
 	message = SUCCESS_SHOW_ROOM + message;
 	return message;
@@ -75,7 +75,8 @@ string join_room(string room_id, string user_id, vector<Room> *rooms, vector<Use
 			for (int j = 0; j < (*users).size(); j++) {
 				if (user_id == (*users)[j].user_id) {
 					(*rooms)[i].client_list.push_back((*users)[j]);
-					return SUCCESS_JOIN_ROOM;
+					if ((*rooms)[i].owner == "-1") return SUCCESS_JOIN_ROOM;
+					else return ROOM_CLOSED + (*rooms)[i].owner + SPLITING_DELIMITER_1 + to_string((*rooms)[i].current_price);
 				}
 			}
 		}

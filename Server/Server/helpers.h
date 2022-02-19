@@ -25,7 +25,7 @@ struct Room {
 	int starting_price;
 	int buy_immediately_price;
 	int current_price;
-	string current_highest_user;
+	string current_highest_user = "0";
 	string owner = "-1"; //default = "-1", if item was sold then = user_id // = 0  if after time-out, no one buy
 	HANDLE timer_thread;
 };
