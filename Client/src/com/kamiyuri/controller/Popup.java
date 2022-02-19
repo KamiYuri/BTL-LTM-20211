@@ -10,19 +10,18 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class Popup implements Initializable {
+    private String content;
+    @FXML
+    private Label contentLabel;
+
     public Popup(RequestType type, AuctionManager auctionManager) {
-        switch (type){
+        switch (type) {
             case BID:
                 content = "đấu giá";
             case BUY:
                 content = "mua";
         }
     }
-
-    private String content;
-
-    @FXML
-    private Label contentLabel;
 
     @FXML
     void cancelBtnAction() {
