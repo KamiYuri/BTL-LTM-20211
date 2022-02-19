@@ -8,5 +8,6 @@ public enum RequestType {
     BID,
     BUY,
     CREATE_ROOM,
-    REFRESH
+    NOTIFICATION,
+    LEAVE_ROOM
 }

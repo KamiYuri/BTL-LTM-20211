@@ -8,24 +8,20 @@ import javafx.stage.Stage;
 
 import java.util.Properties;
 
-public class CreateRoomWindowController{
-    private AuctionManager auctionManager;
+public class CreateRoomWindowController {
+    private final AuctionManager auctionManager;
+    @FXML
+    private TextField itemBuyField;
+    @FXML
+    private TextArea itemDescriptionField;
+    @FXML
+    private TextField itemNameField;
+    @FXML
+    private TextField itemStartPriceField;
 
     public CreateRoomWindowController(AuctionManager auctionManager) {
         this.auctionManager = auctionManager;
     }
-
-    @FXML
-    private TextField itemBuyField;
-
-    @FXML
-    private TextArea itemDescriptionField;
-
-    @FXML
-    private TextField itemNameField;
-
-    @FXML
-    private TextField itemStartPriceField;
 
     @FXML
     void cancelBtnAction() {
@@ -35,12 +31,15 @@ public class CreateRoomWindowController{
 
     @FXML
     void submitBtnAct() {
-        Properties data= new Properties();
+        Properties data = new Properties();
         data.put("itemName", itemNameField.getText());
         data.put("itemDescription", itemDescriptionField.getText());
         data.put("itemStartPrice", itemStartPriceField.getText());
         data.put("itemBuyPrice", itemBuyField.getText());
 
         auctionManager.createRoom(data);
+
+        Stage stage = (Stage) itemNameField.getScene().getWindow();
+        stage.close();
     }
 }
