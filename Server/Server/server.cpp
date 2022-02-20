@@ -2,6 +2,7 @@
 //
 #include "status_code.h"
 #include "helpers.h"
+#include "communication.h"
 #include <iostream>
 #include <stdio.h>
 #include <conio.h>
@@ -20,12 +21,8 @@
 //#define  WSA_MAXIMUM_WAIT_EVENTS 2
 #define SERVER_ADDR "127.0.0.1"
 #define PORT 5500
-#define BUFF_SIZE 2048
 using namespace std;
 
-char send_buff[BUFF_SIZE], recv_buff[BUFF_SIZE], buff[BUFF_SIZE];
-string message_queue[10000]; //  temp use, change size later
-int ret;
 HANDLE hthread;
 
 vector<User> users;
@@ -49,12 +46,7 @@ void create_room_handler(
 	int buy_immediately_price,
 	SOCKET client_socket);
 void leave_room_handler(string room_id, string user_id, SOCKET client_socket);
-void server_notification(string room_id, string message);
 
-int Receive(SOCKET, char *, int, int);
-int Send(SOCKET, char *, int, int);
-void byte_stream_sender(SOCKET client, string message);
-string byte_stream_receiver(string* message_queue, string received_message);
 unsigned __stdcall timer_thread(void *param);
 unsigned __stdcall worker_thread(void *param);
 
@@ -261,29 +253,19 @@ unsigned __stdcall timer_thread(void *param) {
 		Sleep(test_time);
 		count++;
 		string message = TIME_NOTIFICATION + to_string(3 - count);
-		server_notification(room_id, message);
+		server_notification(room_id, message, &rooms);
 	}
 
 	// set user_id as an owner when the time is over
 	for (int i = 0;i < rooms.size();i++)
 		if (rooms[i].room_id == room_id) {
 			rooms[i].owner = rooms[i].current_highest_user;
-			server_notification(room_id, ITEM_SOLD_NOTIFICATION + rooms[i].owner);
+			server_notification(room_id, ITEM_SOLD_NOTIFICATION + rooms[i].owner, &rooms);
 		}
 
 	return 0;
 }
 
-void server_notification(string room_id, string message) {
-	for (int i = 0;i < rooms.size();i++) {
-		if (rooms[i].room_id == room_id) {
-			vector<User> participants = rooms[i].client_list;
-			for (int j = 0;j < participants.size();j++)
-				byte_stream_sender(participants[j].socket, message);
-		}
-	}
-
-}
 
 void log_in_handler(string email, string password, SOCKET client_socket) {
 	string message = login(email, password, client_socket, &users, &user_id_count);
@@ -313,15 +295,24 @@ void bid_handler(int price, string room_id, string user_id, SOCKET client_socket
 		rooms[room_index].timer_thread = hthread;
 
 		byte_stream_sender(client_socket, message);
-		server_notification(room_id, NEW_PRICE_NOTIFICATION + to_string(price));
+		server_notification(room_id, NEW_PRICE_NOTIFICATION + to_string(price), &rooms);
 	}
 	else {
 		byte_stream_sender(client_socket, message);
 	}
 };
 void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket) {
-	string message = buy_immediately(room_id, user_id, &rooms);	
-	byte_stream_sender(client_socket, message);
+	string message = buy_immediately(room_id, user_id, &rooms);
+	if (message.substr(0, 2) == SUCCESS_BUY_IMMEDIATELY) {
+		int room_index = stoi(message.substr(2, message.length() - 2));
+		TerminateThread(rooms[room_index].timer_thread, 0);
+
+		byte_stream_sender(client_socket, message);
+		server_notification(room_id, ITEM_SOLD_NOTIFICATION + rooms[room_index].owner, &rooms);
+	}
+	else {
+		byte_stream_sender(client_socket, message);
+	}
 };
 
 void create_room_handler(
@@ -359,73 +350,6 @@ void leave_room_handler(string room_id, string user_id, SOCKET client_socket) {
 	byte_stream_sender(client_socket, message);
 }
 
-string byte_stream_receiver(string* message_queue, string received_message) {
-	*message_queue = *message_queue + received_message;
-	string user_message;
-	int delimiter_position = (*message_queue).find(ENDING_DELIMITER);
-	// if there is data end signal => handle
-	if (delimiter_position != -1)
-		user_message = (*message_queue).substr(0, delimiter_position);
-
-	*message_queue = (*message_queue).substr(delimiter_position + 2, (*message_queue).length() - delimiter_position);
-	return user_message;
-}
-
-void byte_stream_sender(SOCKET client, string message) {
-	message = message + ENDING_DELIMITER;
-	int message_length = message.length();
-	int left_bytes = message_length;
-	int index = 0;
-
-	//split message to send when message's size is larger than buff size
-	while (left_bytes != 0)
-	{
-		// if left message size <  buff_size => send everything left
-		if (left_bytes <= BUFF_SIZE)
-		{
-			string tmp = message.substr(index, left_bytes);
-			strcpy_s(send_buff, tmp.length() + 1, &tmp[0]);
-			left_bytes = 0;
-			ret = Send(client, send_buff, strlen(send_buff), 0);
-			if (ret == SOCKET_ERROR)
-				printf("Error %d", WSAGetLastError());
-		}
-		else
-		{
-			// send parts of message
-			string tmp = message.substr(index, BUFF_SIZE);
-			strcpy_s(send_buff, tmp.length() + 1, &tmp[0]);
-			ret = Send(client, send_buff, strlen(send_buff), 0);
-			if (ret == SOCKET_ERROR)
-				printf("Error %d", WSAGetLastError());
-			left_bytes = left_bytes - ret;
-			index = index + ret;
-		}
-	}
-};
-
-/* The recv() wrapper function */
-int Receive(SOCKET s, char *buff, int size, int flags) {
-	int n;
-
-	n = recv(s, buff, size, flags);
-	if (n == SOCKET_ERROR)
-		printf("Error %d: Cannot receive data.\n", WSAGetLastError());
-	else if (n == 0)
-		printf("Client disconnects.\n");
-	return n;
-}
-
-/* The send() wrapper function*/
-int Send(SOCKET s, char *buff, int size, int flags) {
-	int n;
-
-	n = send(s, buff, size, flags);
-	if (n == SOCKET_ERROR)
-		printf("Error %d: Cannot send data.\n", WSAGetLastError());
-
-	return n;
-}
 
 void filter_request(string message, SOCKET client_socket) {
 	string method = message.substr(0, 6);
