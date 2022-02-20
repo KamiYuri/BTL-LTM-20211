@@ -146,10 +146,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="communication.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="communication.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="status_code.h" />
   </ItemGroup>
