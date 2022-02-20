@@ -5,11 +5,9 @@
 #include <vector>
 #include <WS2tcpip.h>
 #include "process.h"
+#include "helpers.h"
 #define BUFF_SIZE 2048
 using namespace std;
-char send_buff[BUFF_SIZE], recv_buff[BUFF_SIZE], buff[BUFF_SIZE];
-string message_queue[10000]; //  temp use, change size later
-int ret;
 
 int Receive(SOCKET, char *, int, int);
 int Send(SOCKET, char *, int, int);

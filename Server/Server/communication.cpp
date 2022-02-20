@@ -2,6 +2,7 @@
 #include "communication.h"
 #include "status_code.h"
 #include "helpers.h"
+char send_buff[BUFF_SIZE];
 string byte_stream_receiver(string* message_queue, string received_message) {
 	*message_queue = *message_queue + received_message;
 	string user_message;
@@ -18,7 +19,7 @@ void byte_stream_sender(SOCKET client, string message) {
 	message = message + ENDING_DELIMITER;
 	int message_length = message.length();
 	int left_bytes = message_length;
-	int index = 0;
+	int index = 0, ret;
 
 	//split message to send when message's size is larger than buff size
 	while (left_bytes != 0)

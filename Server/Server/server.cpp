@@ -23,6 +23,10 @@
 #define PORT 5500
 using namespace std;
 
+char recv_buff[BUFF_SIZE], buff[BUFF_SIZE];
+string message_queue[10000]; //  temp use, change size later
+int ret;
+
 HANDLE hthread;
 
 vector<User> users;
