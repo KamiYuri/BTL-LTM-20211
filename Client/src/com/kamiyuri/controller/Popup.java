@@ -3,16 +3,22 @@ package com.kamiyuri.controller;
 import com.kamiyuri.AuctionManager;
 import com.kamiyuri.TCP.RequestType;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
-public class Popup implements Initializable {
+public class Popup {
+    private Stage owner;
     private String content;
     @FXML
     private Label contentLabel;
@@ -23,44 +29,47 @@ public class Popup implements Initializable {
     @FXML
     private Label bidLabel;
 
-    private Consumer<String> callback;
+    private Consumer<Void> callback;
 
-    public void setCallback(Consumer<String> callback) {
+    public Popup(Consumer<Void> callback, String content, Stage owner) {
+        this.content = content;
         this.callback = callback;
+        this.owner = owner;
     }
 
-    public Popup(RequestType type, AuctionManager auctionManager) {
-        switch (type) {
-            case BID:
-                content = "đấu giá";
-                break;
-            case BUY: {
-                content = "mua";
-                break;
-            }
+    public void show(){
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("popup.fxml"));
+        fxmlLoader.setController(this);
+        Parent parent;
+        try {
+            parent = fxmlLoader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
         }
+        Scene scene = new Scene(parent);
+        Stage stage = new Stage();
+
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initOwner(owner);
+
+        stage.setScene(scene);
+        stage.setResizable(false);
+
+        contentLabel.setText(content);
+
+        stage.show();
     }
 
     @FXML
     void submitBtnAction() {
         Stage stage = (Stage)bidLabel.getScene().getWindow();
-        callback.accept(bidField.getText());
+        callback.accept(null);
         stage.close();
-
     }
     @FXML
     void cancelBtnAction() {
         Stage stage = (Stage) contentLabel.getScene().getWindow();
         stage.close();
-    }
-
-    public void set(){
-        bidLabel.setVisible(true);
-        bidField.setVisible(true);
-    }
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        contentLabel.setText("Bạn chắc chắn muốn " + content + " sản phẩm này ?");
     }
 }

@@ -10,16 +10,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
@@ -74,16 +72,19 @@ public class MainWindowController extends BaseController implements Initializabl
 
     @FXML
     void bidBtnAction() {
-        Popup popupController = new Popup(RequestType.BID, auctionManager);
-        popupController.setCallback(price -> auctionManager.bid(price));
-        showPopup(RequestType.BID, popupController);
+//        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+//        Optional<ButtonType> result = alert.showAndWait();
+//         if (result.equals(ButtonType.OK)){
+//             //goi bid
+//         }
     }
 
     @FXML
     void buyBtnAction() {
-        Popup popupController = new Popup(RequestType.BUY, auctionManager);
-        popupController.setCallback(unused -> auctionManager.buy());
-        showPopup(RequestType.BUY, popupController);
+        Consumer<Void> callback = unused -> {
+            auctionManager.buy();
+        };
+        showPopup(callback, "Bạn chắc chắn muốn mua luôn vật phẩm này?");
     }
 
     @FXML
@@ -107,12 +108,24 @@ public class MainWindowController extends BaseController implements Initializabl
         stage.setResizable(false);
 
         stage.show();
-
     }
 
     @FXML
     void logoutAction() {
+        Consumer<Void> callback = unused -> {
+            auctionManager.logout();
+        };
+        showPopup(callback, "Bạn chắc chắn muốn đăng xuất?");
 
+        if(auctionManager.handleLogout()){
+            Stage stage = (Stage) userNameLabel.getScene().getWindow();
+            stage.close();
+            viewFactory.showLoginWindow();
+        }else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Xảy ra lỗi khi đăng xuất.");
+            alert.showAndWait();
+        }
     }
 
     @FXML
@@ -126,7 +139,6 @@ public class MainWindowController extends BaseController implements Initializabl
         setUpUserInf();
         setUpTreeView();
         auctionManager.setLockBidCallback(lockBid);
-        auctionManager.setNoticCallback(setNotic);
     }
 
     private void setUpRoomPane() {
@@ -149,10 +161,10 @@ public class MainWindowController extends BaseController implements Initializabl
 
         auctionManager.setRoot(roomTreeView.getRoot());
 
-
         roomTreeView.setOnMouseClicked(event -> {
             RoomTreeItem<String> item = (RoomTreeItem<String>) roomTreeView.getSelectionModel().getSelectedItem();
             if (item != null) {
+                auctionManager.getRooms(roomTreeView.getRoot());
                 Room selectedRoom = auctionManager.getSelectedRoom(item.getValue());
 
                 roomIdLabel.setText("Phòng số " + selectedRoom.getRoomId());
@@ -162,7 +174,7 @@ public class MainWindowController extends BaseController implements Initializabl
                 itemBuyPriceLabel.setText("Giá mua: " + selectedRoom.getBuyImmediatelyPrice() + " VNĐ");
 
                 roomPane.getChildren().forEach(node -> {
-                    if(node != bidBtn & node != buyBtn & node != noticLabel & node != soldLabel) {
+                    if (node != bidBtn & node != buyBtn & node != noticLabel & node != soldLabel) {
                         node.setVisible(true);
                     }
                 });
@@ -170,37 +182,6 @@ public class MainWindowController extends BaseController implements Initializabl
         });
 
     }
-
-    private void showPopup(RequestType type, Popup popupController) {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("popup.fxml"));
-        fxmlLoader.setController(popupController);
-        Parent parent;
-        try {
-            parent = fxmlLoader.load();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        Scene scene = new Scene(parent);
-        Stage stage = new Stage();
-
-        stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(roomIdLabel.getScene().getWindow().getScene().getWindow());
-
-        stage.setScene(scene);
-        stage.setResizable(false);
-
-        if(type == RequestType.BID){
-            popupController.set();
-        }
-
-        stage.showAndWait();
-    }
-
-    private Consumer<String> setNotic = str -> {
-        soldLabel.setVisible(true);
-        soldLabel.setText(str);
-    };
 
     private Consumer<String> lockBid = str -> {
         if(str.equals("SUCCESS")){
@@ -213,22 +194,11 @@ public class MainWindowController extends BaseController implements Initializabl
             buyBtn.setVisible(false);
             soldLabel.setVisible(true);
             noticLabel.setVisible(true);
-
-            switch (str){
-                case "NO_BUY":
-                    soldLabel.setText("Đã kết thúc đấu giá. Không ai mua được vật phẩm.");
-                    break;
-                case "BOUGHT":
-                    soldLabel.setText("Đã kết thúc đấu giá và bạn đã mua được vật phẩm.");
-                    break;
-                case "SOLD":
-                    soldLabel.setText("Đã kết thúc đấu giá và có người đã mua được vật phẩm.");
-                    break;
-            }
         }
-
-
-
     };
 
+    private void showPopup(Consumer<Void> callback, String content){
+        Popup popup = new Popup(callback, content, (Stage) itemNameLabel.getScene().getWindow());
+        popup.show();
+    }
 }
