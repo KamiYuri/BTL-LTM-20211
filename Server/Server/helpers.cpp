@@ -76,8 +76,8 @@ string join_room(string room_id, string user_id, vector<Room> *rooms, vector<Use
 				if (user_id == (*users)[j].user_id) {
 					(*rooms)[i].client_list.push_back((*users)[j]);
 					(*users)[j].joined_room_id = room_id;
-					if ((*rooms)[i].owner == "-1") return SUCCESS_JOIN_ROOM;
-					else return ROOM_CLOSED + (*rooms)[i].owner + SPLITING_DELIMITER_1 + to_string((*rooms)[i].current_price);
+					if ((*rooms)[i].owner == "-1") return SUCCESS_JOIN_ROOM + (*rooms)[i].room_id;
+					else return ROOM_CLOSED + (*rooms)[i].owner + SPLITING_DELIMITER_1 + to_string((*rooms)[i].current_price) + SPLITING_DELIMITER_1;
 				}
 			}
 		}
