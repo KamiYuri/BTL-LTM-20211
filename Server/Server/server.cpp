@@ -213,9 +213,10 @@ unsigned __stdcall worker_thread(void *param) {
 			if (ret <= 0) {
 				closesocket(socks[index]);
 				WSACloseEvent(events[index]);
-
 				socks[index] = socks[nEvents - 1];
 				events[index] = events[nEvents - 1];
+				socks[nEvents - 1] = 0;
+				events[nEvents - 1] = 0;
 				nEvents--;
 			}
 			else {
@@ -233,11 +234,17 @@ unsigned __stdcall worker_thread(void *param) {
 			if (sockEvent.iErrorCode[FD_CLOSE_BIT] != 0) {
 				printf("FD_CLOSE failed with error %d\n", sockEvent.iErrorCode[FD_CLOSE_BIT]);
 			}
-			// logout handler here
+			// log out user from joined room
+			for (int i = 0; i < users.size(); i++)
+				if (users[i].socket == socks[index])
+					string ignored_response = leave_room(users[i].joined_room_id, users[i].user_id, &rooms, &users);
 			//Release socket and event
 			closesocket(socks[index]);
-			socks[index] = 0;
 			WSACloseEvent(events[index]);
+			socks[index] = socks[nEvents -1];
+			events[index] = events[nEvents - 1];
+			socks[nEvents - 1] = 0;
+			events[nEvents - 1] = 0;
 			nEvents--;
 		}
 	}
@@ -259,8 +266,10 @@ unsigned __stdcall timer_thread(void *param) {
 
 	// set user_id as an owner when the time is over
 	for (int i = 0;i < rooms.size();i++)
-		if (rooms[i].room_id == room_id)
+		if (rooms[i].room_id == room_id) {
 			rooms[i].owner = rooms[i].current_highest_user;
+			server_notification(room_id, ITEM_SOLD_NOTIFICATION + rooms[i].owner);
+		}
 
 	return 0;
 }
@@ -311,7 +320,7 @@ void bid_handler(int price, string room_id, string user_id, SOCKET client_socket
 	}
 };
 void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket) {
-	string message = buy_immediately(room_id, user_id, &rooms);
+	string message = buy_immediately(room_id, user_id, &rooms);	
 	byte_stream_sender(client_socket, message);
 };
 
@@ -346,7 +355,7 @@ void create_room_handler(
 };
 
 void leave_room_handler(string room_id, string user_id, SOCKET client_socket) {
-	string message = leave_room(room_id, user_id, &rooms);
+	string message = leave_room(room_id, user_id, &rooms, &users);
 	byte_stream_sender(client_socket, message);
 }
 

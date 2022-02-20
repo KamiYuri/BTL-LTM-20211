@@ -135,16 +135,20 @@ string create_room(string user_id, string item_name, string item_description, in
 	else return INVALID_INFORMATION;
 }
 
-string leave_room(string room_id, string user_id, vector<Room> *rooms) {
+string leave_room(string room_id, string user_id, vector<Room> *rooms, vector<User> *users) {
 	for (int i = 0; i < (*rooms).size(); i++) {
 		if ((*rooms)[i].room_id == room_id) {
 			for (int j = 0; j < ((*rooms)[i].client_list).size(); j++) {
 				if (((*rooms)[i].client_list)[j].user_id == user_id) {
 					((*rooms)[i].client_list).erase(((*rooms)[i].client_list).begin() + j);
-					((*rooms)[i].client_list)[j].joined_room_id = "-1";
 					return SUCCESS_LEAVE_ROOM;
 				}
 			}
+		}
+	}
+	for (int i = 0; i < (*users).size(); i++) {
+		if ((*users)[i].user_id == user_id) {
+			(*users)[i].joined_room_id = "-1";
 		}
 	}
 	return ROOM_ID_NOT_FOUND;
