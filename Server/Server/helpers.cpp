@@ -30,7 +30,7 @@ string login(string email, string password, SOCKET client_socket, vector<User> *
 			int space = line.find(" ");
 			id = line.substr(0, space);
 			line = line.substr(space + 1, line.length() - space - 1);
-			int space = line.find(" ");
+			space = line.find(" ");
 			string account = line.substr(0, space);
 			string pass = line.substr(space + 1);
 			if (email == account && password == pass) {
