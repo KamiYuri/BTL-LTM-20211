@@ -56,6 +56,18 @@ public class MainWindowController extends BaseController implements Initializabl
     @FXML
     private TreeView<String> roomTreeView;
 
+    @FXML
+    private Button bidBtn;
+
+    @FXML
+    private Button buyBtn;
+
+    @FXML
+    private Label noticLabel;
+
+    @FXML
+    private Label soldLabel;
+
     public MainWindowController(AuctionManager auctionManager, ViewFactory viewFactory, String fxmlName) {
         super(auctionManager, viewFactory, fxmlName);
     }
@@ -95,6 +107,7 @@ public class MainWindowController extends BaseController implements Initializabl
         stage.setResizable(false);
 
         stage.show();
+
     }
 
     @FXML
@@ -112,6 +125,8 @@ public class MainWindowController extends BaseController implements Initializabl
         setUpRoomPane();
         setUpUserInf();
         setUpTreeView();
+        auctionManager.setLockBidCallback(lockBid);
+        auctionManager.setNoticCallback(setNotic);
     }
 
     private void setUpRoomPane() {
@@ -147,7 +162,9 @@ public class MainWindowController extends BaseController implements Initializabl
                 itemBuyPriceLabel.setText("Giá mua: " + selectedRoom.getBuyImmediatelyPrice() + " VNĐ");
 
                 roomPane.getChildren().forEach(node -> {
-                    node.setVisible(true);
+                    if(node != bidBtn & node != buyBtn & node != noticLabel & node != soldLabel) {
+                        node.setVisible(true);
+                    }
                 });
             }
         });
@@ -179,4 +196,39 @@ public class MainWindowController extends BaseController implements Initializabl
 
         stage.showAndWait();
     }
+
+    private Consumer<String> setNotic = str -> {
+        soldLabel.setVisible(true);
+        soldLabel.setText(str);
+    };
+
+    private Consumer<String> lockBid = str -> {
+        if(str.equals("SUCCESS")){
+                bidBtn.setVisible(true);
+                buyBtn.setVisible(true);
+                soldLabel.setVisible(false);
+                noticLabel.setVisible(false);
+        } else {
+            bidBtn.setVisible(false);
+            buyBtn.setVisible(false);
+            soldLabel.setVisible(true);
+            noticLabel.setVisible(true);
+
+            switch (str){
+                case "NO_BUY":
+                    soldLabel.setText("Đã kết thúc đấu giá. Không ai mua được vật phẩm.");
+                    break;
+                case "BOUGHT":
+                    soldLabel.setText("Đã kết thúc đấu giá và bạn đã mua được vật phẩm.");
+                    break;
+                case "SOLD":
+                    soldLabel.setText("Đã kết thúc đấu giá và có người đã mua được vật phẩm.");
+                    break;
+            }
+        }
+
+
+
+    };
+
 }

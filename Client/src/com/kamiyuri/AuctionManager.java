@@ -13,9 +13,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TreeItem;
+import javafx.scene.control.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -30,7 +28,9 @@ public class AuctionManager {
     private String loginResponse, logoutResponse, roomResponse, createRoomResponse, joinRoomResponse, bidResponse, buyResponse;
     private ObservableList<String> noticfications = FXCollections.observableArrayList();
 
-    Consumer<String> getResponseCallback = response -> {
+    private Consumer<String> lockBidCallback, noticCallback;
+
+    private Consumer<String> getResponseCallback = response -> {
         RequestType code = RequestType.values()[Character.getNumericValue(response.charAt(0)) - 1];
 
         switch (code) {
@@ -183,12 +183,19 @@ public class AuctionManager {
                 String currentPrice = scanner.next();
 
                 if(owner.equals('0')){
-                    //ko ai mua
+                    lockBidCallback.accept("NO_BUY");
                 }
 
-                else{
-                    //da co nguoi mua
+                else {
+                    if(owner.equals(account.getUserId())) {
+                        lockBidCallback.accept("BOUGHT");
+                    }
+                    else {
+                        lockBidCallback.accept("SOLD");
+                    }
                 }
+            } else {
+                lockBidCallback.accept("SUCCESS");
             }
         });
     }
@@ -355,6 +362,23 @@ public class AuctionManager {
         service.start();
 
         service.setOnSucceeded(event -> {
+            switch (bidResponse){
+                case "50":
+                    noticCallback.accept("Bạn đã đấu giá thành công.");
+                    break;
+                case "51":
+                    noticCallback.accept("Bạn ra giá thấp hơn giá hiện tại của vật phẩm");
+                case "52":
+                    noticCallback.accept("Người tạo phòng không được tham gia đấu giá");
+            }
         });
+    }
+
+    public void setLockBidCallback(Consumer<String> lockBid) {
+        this.lockBidCallback = lockBid;
+    }
+
+    public void setNoticCallback(Consumer<String> noticCallback) {
+        this.noticCallback = noticCallback;
     }
 }
