@@ -8,6 +8,6 @@ module Client {
     opens com.kamiyuri;
     opens com.kamiyuri.view;
     opens com.kamiyuri.controller;
-    opens com.kamiyuri.TCP;
+    opens com.kamiyuri.tcp;
 
 }

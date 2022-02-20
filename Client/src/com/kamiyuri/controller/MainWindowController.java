@@ -1,31 +1,26 @@
 package com.kamiyuri.controller;
 
 import com.kamiyuri.AuctionManager;
-import com.kamiyuri.TCP.RequestType;
+import com.kamiyuri.controller.services.*;
 import com.kamiyuri.model.Room;
-import com.kamiyuri.model.RoomTreeItem;
 import com.kamiyuri.view.ViewFactory;
+import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 
 public class MainWindowController extends BaseController implements Initializable {
-
     private Room selectedRoom;
+    private ObservableList<String> notifications;
 
     @FXML
     private Label itemBuyPriceLabel;
@@ -63,126 +58,82 @@ public class MainWindowController extends BaseController implements Initializabl
     private Button buyBtn;
 
     @FXML
-    private Label noticLabel;
-
-    @FXML
-    private Label soldLabel;
+    private Label notificationLabel;
 
     public MainWindowController(AuctionManager auctionManager, ViewFactory viewFactory, String fxmlName) {
         super(auctionManager, viewFactory, fxmlName);
     }
 
-    private class BidPopup{
-
-        @FXML
-        private TextField bidPriceField;
-
-        Boolean result = false;
-        String input;
-
-        @FXML
-        void cancelBtnAction() {
-            close();
-        }
-
-        @FXML
-        void submitBtnAction() {
-            result = true;
-            input = bidPriceField.getText();
-            close();
-        }
-
-        void close(){
-            Stage stage = (Stage) bidPriceField.getScene().getWindow();
-            stage.close();
-        }
-    }
-
-    @FXML
-    void bidBtnAction() {
-        BidPopup bidPopup = new BidPopup();
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("bidPopup.fxml"));
-        fxmlLoader.setController(bidPopup);
-        Parent parent;
-        try {
-            parent = fxmlLoader.load();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        Scene scene = new Scene(parent);
-        Stage stage = new Stage();
-
-        stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(roomIdLabel.getScene().getWindow().getScene().getWindow());
-
-        stage.setScene(scene);
-        stage.setResizable(false);
-
-        stage.showAndWait();
-
-        if(bidPopup.result){
-            auctionManager.bid(bidPopup.input);
-        }
-    }
-
-    @FXML
-    void buyBtnAction() {
-        Consumer<Void> callback = unused -> {
-            auctionManager.buy();
-        };
-        Popup popup = new Popup((Stage) itemNameLabel.getScene().getWindow());
-        popup.show(callback,"Bạn chắc chắn muốn mua luôn vật phẩm này?");
-    }
-    private Popup popup;
-
     @FXML
     void createRoomAction() {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("CreateRoomWindow.fxml"));
-        fxmlLoader.setController(new CreateRoomWindowController(auctionManager));
-        Parent parent;
-        try {
-            parent = fxmlLoader.load();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        Scene scene = new Scene(parent);
-        Stage stage = new Stage();
-
-        stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(roomIdLabel.getScene().getWindow().getScene().getWindow());
-
-        stage.setScene(scene);
-        stage.setResizable(false);
-
-        stage.show();
-
-        popup = new Popup((Stage) itemNameLabel.getScene().getWindow());
+        viewFactory.showCreateRoomWindow();
     }
 
     @FXML
     void logoutAction() {
-        Consumer<Void> callback = unused -> {
-            auctionManager.logout();
-        };
-        Popup popup = new Popup((Stage) itemNameLabel.getScene().getWindow());
-        popup.show(callback, "Bạn chắc chắn muốn đăng xuất?");
+        LogoutService logoutService = new LogoutService(auctionManager);
+        logoutService.start();
+        logoutService.setOnSucceeded(event -> {
+            LogoutResult logoutResult = logoutService.getValue();
 
-        if(auctionManager.handleLogout()){
-            Stage stage = (Stage) userNameLabel.getScene().getWindow();
-            stage.close();
-            viewFactory.showLoginWindow();
-        }else {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Xảy ra lỗi khi đăng xuất.");
-            alert.showAndWait();
-        }
+            if (logoutResult == LogoutResult.SUCCESS) {
+                viewFactory.closeStage((Stage) itemNameLabel.getScene().getWindow());
+                viewFactory.showLoginWindow();
+            }
+        });
     }
 
     @FXML
     void refreshRoomsAction() {
-        auctionManager.getRooms(roomTreeView.getRoot());
+        auctionManager.setGetRoomsResponse(null);
+        setUpTreeView();
+    }
+
+    @FXML
+    void bidBtnAction() {
+        viewFactory.showBidWindow();
+    }
+
+    @FXML
+    void buyBtnAction() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setContentText("Bạn chắc chắn muốn mua vật phẩm này?");
+        Optional<ButtonType> result = alert.showAndWait();
+
+
+        if (result.get() == ButtonType.OK) {
+            BuyService buyService = new BuyService(auctionManager);
+            buyService.start();
+            buyService.setOnSucceeded(event -> {
+                BuyResult buyResult = buyService.getValue();
+
+                switch (buyResult) {
+                    case SUCCESS: {
+                        Alert alert1 = new Alert(Alert.AlertType.INFORMATION);
+                        alert1.setHeaderText("Mua thành công.");
+                        alert1.setContentText("Bạn đã mua thành công vật phẩm.");
+                        alert1.showAndWait();
+                        break;
+                    }
+                    case ALREADY_SOLD: {
+                        Alert alert1 = new Alert(Alert.AlertType.ERROR);
+                        alert1.setHeaderText("Mua vật phẩm thất bại");
+                        alert1.setContentText("Vật phẩm đã được mua bởi người khác.");
+                        alert1.showAndWait();
+                        showData(false);
+                        notificationLabel.setText("Vật phẩm đã được mua bởi người khác.");
+                        break;
+                    }
+                    case CREATOR_CANT_BID: {
+                        Alert alert1 = new Alert(Alert.AlertType.ERROR);
+                        alert1.setHeaderText("Mua vật phẩm thất bại");
+                        alert1.setContentText("Chủ phòng không thể mua vật phẩm.");
+                        alert1.showAndWait();
+                        break;
+                    }
+                }
+            });
+        }
     }
 
     @Override
@@ -190,7 +141,67 @@ public class MainWindowController extends BaseController implements Initializabl
         setUpRoomPane();
         setUpUserInf();
         setUpTreeView();
-        auctionManager.setLockBidCallback(lockBid);
+        setUpRoomSelection();
+        setUpNotificationHandle();
+        setUpCloseConnection();
+    }
+
+    private void setUpCloseConnection() {
+        Stage stage = (Stage) itemNameLabel.getScene().getWindow();
+        stage.setOnCloseRequest(event -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setHeaderText("Tắt chương trình?");
+
+            Optional<ButtonType> option = alert.showAndWait();
+            if (option.get() == ButtonType.OK) {
+                auctionManager.diconnect();
+                stage.close();
+            }
+        });
+    }
+
+    private void setUpNotificationHandle() {
+        this.notifications = auctionManager.getNotifications();
+        notifications.addListener((ListChangeListener<? super String>) change -> {
+            while (change.next()) {
+                if (change.wasAdded()) {
+                    handleNotification(change.getList(), this.notificationLabel);
+                }
+            }
+        });
+    }
+
+    private void handleNotification(ObservableList<? extends String> notificationList, Label notificationLabel) {
+        String notification = notificationList.get(notificationList.size() - 1);
+
+        switch (notification.substring(0, 2)) {
+            case "80":
+                Platform.runLater(() -> {
+                    if (notification.substring(2) == auctionManager.getAccount().getUserId()) {
+                        notificationLabel.setText("Bạn đã mua thành công vật phẩm.");
+                    } else {
+                        notificationLabel.setText("Vật phẩm đã được mua bởi người khác.");
+                    }
+                    notificationLabel.setVisible(true);
+                });
+                break;
+            case "81":
+                Platform.runLater(() -> {
+                    notificationLabel.setText("Thời gian còn lại " + notification.substring(2) + " phút.");
+                    if (notification.substring(2) == "80") {
+                        bidBtn.setVisible(false);
+                        buyBtn.setVisible(false);
+                    }
+                    notificationLabel.setVisible(true);
+                });
+                break;
+            case "82":
+                Platform.runLater(() -> {
+                    itemCurrentPriceLabel.setText("Giá hiện tại: " + notification.substring(2) + " VNĐ");
+                });
+                break;
+        }
+
     }
 
     private void setUpRoomPane() {
@@ -200,52 +211,68 @@ public class MainWindowController extends BaseController implements Initializabl
     }
 
     private void setUpUserInf() {
-        this.userIdLabel.setText("Mã tài khoản: " + auctionManager.getUserId());
-        this.userNameLabel.setText("Tài khoản: " + auctionManager.getUserName());
+        this.userIdLabel.setText("Mã tài khoản: " + auctionManager.getAccount().getUserId());
+        this.userNameLabel.setText("Tài khoản: " + auctionManager.getAccount().getUsername());
     }
 
     private void setUpTreeView() {
-        TreeItem<String> room = new TreeItem<>("");
-        room.setExpanded(true);
-        auctionManager.getRooms(room);
-        roomTreeView.setRoot(room);
+        roomTreeView.setRoot(auctionManager.getTreeRoot());
         roomTreeView.setShowRoot(false);
+    }
 
-        auctionManager.setRoot(roomTreeView.getRoot());
-
-        roomTreeView.setOnMouseClicked(event -> {
-            RoomTreeItem<String> item = (RoomTreeItem<String>) roomTreeView.getSelectionModel().getSelectedItem();
+    private void setUpRoomSelection() {
+        roomTreeView.setOnMouseClicked(e -> {
+            TreeItem<String> item = roomTreeView.getSelectionModel().getSelectedItem();
             if (item != null) {
-                auctionManager.getRooms(roomTreeView.getRoot());
-                Room selectedRoom = auctionManager.getSelectedRoom(item.getValue());
+                FilteredList<Room> roomFilteredList = auctionManager.getRoomList().filtered(room -> room.getRoomId().equals(item.getValue()));
+                selectedRoom = roomFilteredList.get(0);
+                auctionManager.setSelectedRoom(selectedRoom);
 
-                roomIdLabel.setText("Phòng số " + selectedRoom.getRoomId());
-                itemNameLabel.setText("Tên vật phẩm: " + selectedRoom.getItemName());
-                itemDescriptionLabel.setText("Mô tả: " + selectedRoom.getItemDescription());
-                itemCurrentPriceLabel.setText("Giá hiện tại: " + selectedRoom.getCurrentPrice() + " VNĐ");
-                itemBuyPriceLabel.setText("Giá mua: " + selectedRoom.getBuyImmediatelyPrice() + " VNĐ");
+                auctionManager.setJoinRoomResponse(null);
 
-                roomPane.getChildren().forEach(node -> {
-                    if (node != bidBtn & node != buyBtn & node != noticLabel & node != soldLabel) {
-                        node.setVisible(true);
+                JoinRoomService joinRoomService = new JoinRoomService(auctionManager);
+                joinRoomService.start();
+                joinRoomService.setOnSucceeded(event -> {
+                    JoinRoomResult joinRoomResult = joinRoomService.getValue();
+
+                    switch (joinRoomResult) {
+                        case SUCCESS:
+                            showData(true);
+                            break;
+                        case BOUGHT_BY_ANOTHER:
+                            notificationLabel.setText("Vật phẩm đã được mua bởi người khác.");
+                            showData(false);
+                            break;
+                        case NO_ONE_BUY:
+                            notificationLabel.setText("Phiên đấu giá đã kết thúc. Vật phẩm chưa được bán.");
+                            showData(false);
+                            break;
+                        case BOUGHT_BY_USER:
+                            notificationLabel.setText("Chúc mừng. Bạn đã mua được vật phẩm");
+                            showData(false);
+                            break;
                     }
                 });
             }
         });
-
     }
 
-    private Consumer<String> lockBid = str -> {
-        if(str.equals("SUCCESS")){
-                bidBtn.setVisible(true);
-                buyBtn.setVisible(true);
-                soldLabel.setVisible(false);
-                noticLabel.setVisible(false);
-        } else {
-            bidBtn.setVisible(false);
-            buyBtn.setVisible(false);
-            soldLabel.setVisible(true);
-            noticLabel.setVisible(true);
-        }
-    };
+    private void showData(boolean joinSuccess) {
+        Room selectedRoom = auctionManager.getSelectedRoom();
+
+        roomIdLabel.setText("Phòng số " + selectedRoom.getRoomId());
+        itemNameLabel.setText("Tên vật phẩm: " + selectedRoom.getItemName());
+        itemDescriptionLabel.setText("Mô tả: " + selectedRoom.getItemDescription());
+        itemCurrentPriceLabel.setText("Giá hiện tại: " + selectedRoom.getCurrentPrice() + " VNĐ");
+        itemBuyPriceLabel.setText("Giá mua: " + selectedRoom.getBuyImmediatelyPrice() + " VNĐ");
+        roomPane.getChildren().forEach(node -> {
+            if (node != bidBtn & node != buyBtn & node != notificationLabel) {
+                node.setVisible(true);
+            }
+        });
+
+        notificationLabel.setVisible(!joinSuccess);
+        bidBtn.setVisible(joinSuccess);
+        buyBtn.setVisible(joinSuccess);
+    }
 }

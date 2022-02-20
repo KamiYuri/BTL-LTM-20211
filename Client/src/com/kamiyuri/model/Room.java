@@ -1,15 +1,11 @@
 package com.kamiyuri.model;
 
-import java.net.Socket;
-import java.util.Timer;
-
 public class Room {
-    private String roomId;
-    private String itemName;
-    private String itemDescription;
-    private String startingPrice;
-    private String currentPrice;
-    private String buyImmediatelyPrice;
+    private final String roomId;
+    private final String itemName;
+    private final String itemDescription;
+    private final String currentPrice;
+    private final String buyImmediatelyPrice;
 
     public Room(String roomId, String itemName, String itemDescription, String currentPrice, String buyImmediatelyPrice) {
         this.roomId = roomId;

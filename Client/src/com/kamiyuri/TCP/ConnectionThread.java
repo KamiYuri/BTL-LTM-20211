@@ -1,4 +1,4 @@
-package com.kamiyuri.TCP;
+package com.kamiyuri.tcp;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,18 +7,15 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
-public class ConnectionThread implements Runnable{
-    private Thread thread;
+public class ConnectionThread implements Runnable {
     private final Socket connSocket;
     private final String serverIp = "127.0.0.1";
     private final short serverPort = 5500;
-
     private final PrintWriter out;
     private final BufferedReader in;
-
     Consumer<String> getResponseCallback;
+    private Thread thread;
 
 
     public ConnectionThread() throws IOException {
@@ -39,8 +36,8 @@ public class ConnectionThread implements Runnable{
         scanner.useDelimiter("\r\n");
 
         String response = "";
-        while (true){
-            if(scanner.hasNext()) {
+        while (true) {
+            if (scanner.hasNext()) {
                 response = scanner.next();
                 System.out.println(response);
                 this.getResponseCallback.accept(response);
@@ -48,8 +45,8 @@ public class ConnectionThread implements Runnable{
         }
     }
 
-    public void start(){
-        if(this.thread == null){
+    public void start() {
+        if (this.thread == null) {
             this.thread = new Thread(this);
             this.thread.start();
         }
@@ -60,10 +57,10 @@ public class ConnectionThread implements Runnable{
         this.out.flush();
     }
 
-    public void disconnect(){
+    public void disconnect() {
         try {
             this.connSocket.close();
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
