@@ -4,6 +4,7 @@ import com.kamiyuri.TCP.ConnectionThread;
 import com.kamiyuri.TCP.Delimiter;
 import com.kamiyuri.TCP.RequestFactory;
 import com.kamiyuri.TCP.RequestType;
+import com.kamiyuri.controller.Popup;
 import com.kamiyuri.model.Account;
 import com.kamiyuri.model.Room;
 import com.kamiyuri.model.RoomTreeItem;
@@ -38,6 +39,7 @@ public class AuctionManager {
                 loginResponse = response;
                 break;
             case LOGOUT:
+                logoutResponse = response;
                 break;
             case SHOW_ROOM:
                 roomResponse = response;
@@ -59,6 +61,11 @@ public class AuctionManager {
                 break;
         }
     };
+    private String currentPrice;
+
+    public String getCurrentPrice() {
+        return currentPrice;
+    }
 
     public AuctionManager() throws IOException {
         this.connectionThread = new ConnectionThread();
@@ -66,7 +73,6 @@ public class AuctionManager {
         this.connectionThread.start();
 
         noticfications.addListener((ListChangeListener<? super String>) observable -> {
-            System.out.println(noticfications.get(0));
             noticfications.remove(0);
         });
     }
@@ -144,9 +150,10 @@ public class AuctionManager {
 
     public Room getSelectedRoom(String roomId){
         FilteredList<Room> roomFilteredList = roomObservableList.filtered(room -> room.getRoomId().equals(roomId));
-        if (selectedRoom != null && selectedRoom != roomFilteredList.get(0)) {
-            leaveRoom(selectedRoom);
-        }
+//        if (selectedRoom != null && !selectedRoom.equals(roomFilteredList.get(0))) {
+//            leaveRoom(selectedRoom);
+//        }
+
         selectedRoom = roomFilteredList.get(0);
         joinRoom(selectedRoom);
 
@@ -154,6 +161,7 @@ public class AuctionManager {
     }
 
     private void joinRoom(Room selectedRoom) {
+
         Service service = new Service() {
             @Override
             protected Task createTask() {
@@ -166,38 +174,45 @@ public class AuctionManager {
 
                         String request = RequestFactory.getRequest(RequestType.JOIN_ROOM, data);
                         sendRequest(request);
+                        String t;
+                        do {
+                            t = joinRoomResponse;
+                        } while (t == null);
                         return null;
                     }
                 };
             }
         };
-
         service.start();
 
         service.setOnSucceeded(event -> {
-            if(joinRoomResponse.charAt(1) == '1'){
-                Scanner scanner = new Scanner(joinRoomResponse.substring(2));
-                scanner.useDelimiter(Delimiter.Two());
-
-                String owner = scanner.next();
-                String currentPrice = scanner.next();
-
-                if(owner.equals('0')){
-                    lockBidCallback.accept("NO_BUY");
-                }
-
-                else {
-                    if(owner.equals(account.getUserId())) {
-                        lockBidCallback.accept("BOUGHT");
-                    }
-                    else {
-                        lockBidCallback.accept("SOLD");
-                    }
-                }
-            } else {
-                lockBidCallback.accept("SUCCESS");
-            }
+            handleJoinRoomResponse();
         });
+    }
+
+    private void handleJoinRoomResponse() {
+        if(joinRoomResponse.charAt(1) == '1'){
+            Scanner scanner = new Scanner(joinRoomResponse.substring(2));
+            scanner.useDelimiter(Delimiter.Two());
+
+            String owner = scanner.next();
+            currentPrice = scanner.next();
+
+            if(owner.equals('0')){
+                lockBidCallback.accept("NO_BUY");
+            }
+
+            else {
+                if(owner.equals(account.getUserId())) {
+                    lockBidCallback.accept("BOUGHT");
+                }
+                else {
+                    lockBidCallback.accept("SOLD");
+                }
+            }
+        } else {
+            lockBidCallback.accept("SUCCESS");
+        }
     }
 
     private void leaveRoom(Room selectedRoom) {
@@ -212,7 +227,13 @@ public class AuctionManager {
                         data.put("roomId", selectedRoom.getRoomId());
 
                         String request = RequestFactory.getRequest(RequestType.LEAVE_ROOM, data);
+
                         sendRequest(request);
+
+                        String t;
+                        do {
+                            t = logoutResponse;
+                        } while (t == null);
                         return null;
                     }
                 };
@@ -256,11 +277,11 @@ public class AuctionManager {
                     protected Object call() throws Exception {
                         String request = RequestFactory.getRequest(RequestType.CREATE_ROOM, data);
                         sendRequest(request);
-
                         String t;
                         do {
                             t = createRoomResponse;
                         } while (t == null);
+
                         return null;
                     }
                 };
@@ -331,7 +352,15 @@ public class AuctionManager {
         service.start();
 
         service.setOnSucceeded(event -> {
-            System.out.println(bidResponse);
+            switch (bidResponse){
+                case "50":
+                    noticCallback.accept("Đấu giá thành công!");
+                    break;
+                case "51":
+                    noticCallback.accept("Đấu giá thất bại. Giá đưa ra thấp hơn giá hiện tại của vật phẩm.");
+                case "52":
+                    noticCallback.accept("Chủ phòng không thể tham gia đấu giá.");
+            }
         });
     }
 
@@ -363,13 +392,15 @@ public class AuctionManager {
 
         service.setOnSucceeded(event -> {
             switch (bidResponse){
-                case "50":
-                    noticCallback.accept("Bạn đã đấu giá thành công.");
+                case "60":
+                    noticCallback.accept("Bạn đã mua thành công vật phẩm.");
                     break;
-                case "51":
-                    noticCallback.accept("Bạn ra giá thấp hơn giá hiện tại của vật phẩm");
-                case "52":
-                    noticCallback.accept("Người tạo phòng không được tham gia đấu giá");
+                case "61":
+                    noticCallback.accept("Vật phẩm đã được mua bởi người khác.");
+                    break;
+                case "62":
+                    noticCallback.accept("Người tạo phòng không thể mua.");
+                    break;
             }
         });
     }
@@ -380,5 +411,40 @@ public class AuctionManager {
 
     public void setNoticCallback(Consumer<String> noticCallback) {
         this.noticCallback = noticCallback;
+    }
+
+    public void logout() {
+        Service service = new Service() {
+            @Override
+            protected Task createTask() {
+                return new Task<>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        Properties data = new Properties();
+                        data.put("userId", account.getUserId());
+
+                        String request = RequestFactory.getRequest(RequestType.LOGOUT, data);
+                        sendRequest(request);
+
+                        String t;
+                        do {
+                            t = logoutResponse;
+                        } while (t == null);
+                        return null;
+                    }
+                };
+            }
+        };
+
+        service.start();
+
+        service.setOnSucceeded(event -> {
+            handleLogout();
+        });
+    }
+
+    public boolean handleLogout() {
+        if(logoutResponse == "20") return true;
+        return false;
     }
 }
