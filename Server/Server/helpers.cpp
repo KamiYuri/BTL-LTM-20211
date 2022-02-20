@@ -20,20 +20,23 @@
 
 using namespace std;
 
-string login(string email, string password, SOCKET client_socket, vector<User> *users, int *id_count) {
+string login(string email, string password, SOCKET client_socket, vector<User> *users) {
+	string id;
 	ifstream fileAcc;
 	fileAcc.open("account.txt");
 	if (fileAcc.is_open()) {
 		string line;
 		while (getline(fileAcc, line)) {
 			int space = line.find(" ");
+			id = line.substr(0, space);
+			line = line.substr(space + 1, line.length() - space - 1);
+			int space = line.find(" ");
 			string account = line.substr(0, space);
 			string pass = line.substr(space + 1);
 			if (email == account && password == pass) {
 				//add info to tmp_user then push to users vector
-				(*id_count)++;
 				User tmp_user;
-				tmp_user.user_id = to_string(*id_count);
+				tmp_user.user_id = id;
 				tmp_user.socket = client_socket;
 				(*users).push_back(tmp_user);
 				return SUCCESS_LOGIN + tmp_user.user_id;
@@ -43,9 +46,20 @@ string login(string email, string password, SOCKET client_socket, vector<User> *
 	}
 }
 
-string logout(string user_id, vector<User> *users){
+string logout(string user_id, vector<User> *users, vector<Room> *rooms){
+
 	for (int i = 0; i < (*users).size(); i++) {
 		if ((*users)[i].user_id == user_id) {
+			for (int i = 0; i < (*rooms).size(); i++) {
+				if ((*rooms)[i].room_id == (*users)[i].joined_room_id) {
+					for (int j = 0; j < ((*rooms)[i].client_list).size(); j++) {
+						if (((*rooms)[i].client_list)[j].user_id == user_id) {
+							((*rooms)[i].client_list).erase(((*rooms)[i].client_list).begin() + j);
+							return SUCCESS_LEAVE_ROOM;
+						}
+					}
+				}
+			}
 			(*users).erase((*users).begin()+i-1);
 			return SUCCESS_LOGOUT;
 		}

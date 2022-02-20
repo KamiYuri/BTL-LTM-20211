@@ -31,8 +31,16 @@ struct Room {
 	HANDLE timer_thread;
 };
 
-string login(string email, string password, SOCKET client_socket, vector<User> *users, int *id_count);
-string logout(string user_id, vector<User> *users);
+/*
+* @function login: verify email and password
+* @param email(string): room id
+* @param password(string): user id
+* @param client_socket(SOCKET): contain socket of request user
+
+* @no return
+*/
+string login(string email, string password, SOCKET client_socket, vector<User> *users);
+string logout(string user_id, vector<User> *users, vector<Room> *rooms);
 string show_room(vector<Room> *rooms);
 string join_room(string room_id, string user_id, vector<Room> *rooms, vector<User> *users);
 string bid(int price, string room_id, string user_id, vector<Room> *rooms);

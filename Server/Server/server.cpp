@@ -18,30 +18,86 @@
 #include <processthreadsapi.h>
 #pragma comment(lib, "Ws2_32.lib")
 
-//#define  WSA_MAXIMUM_WAIT_EVENTS 2
 #define SERVER_ADDR "127.0.0.1"
 #define PORT 5500
 using namespace std;
 
-char recv_buff[BUFF_SIZE], buff[BUFF_SIZE];
+char recv_buff[BUFF_SIZE];
 string message_queue[10000]; //  temp use, change size later
-int ret;
-
+int ret, room_id_count = 1;
 HANDLE hthread;
-
 vector<User> users;
 vector<Room> rooms;
-int user_id_count = 1;
-int room_id_count = 1;
-// data structure declaration
 
+/*
+* @function filter_request: send message payload to the suitable message handler based on message method
+* @param message(string): message detail
+* @param client_socket(SOCKET): contain socket of request user
+* @no return
+*/
 void filter_request(string message, SOCKET client_socket);
+
+/*
+* @function log_in_handler: verify user email and password based on account.txt
+* @param email(string): user email
+* @param password(string): user password
+* @param client_socket(SOCKET): contain socket of request user
+* @no return
+*/
 void log_in_handler(string email, string password, SOCKET client_socket);
+
+/*
+* @function log_out_handler: delete user connection socket
+* @param user_id(string): user id
+* @param client_socket(SOCKET): contain socket of request user
+* @no return
+*/
 void log_out_handler(string user_id, SOCKET client_socket);
+
+/*
+* @function show_rooms_handler: display all created rooms
+* @param client_socket(SOCKET): contain socket of request user
+* @no return
+*/
 void show_rooms_handler(SOCKET client_socket);
+
+/*
+* @function join_room_handler: add user to a room
+* @param room_id(string): room id
+* @param user_id(string): user id
+* @param client_socket(SOCKET): contain socket of request user
+* @no return
+*/
 void join_room_handler(string room_id, string user_id, SOCKET client_socket);
+
+/*
+* @function bid_handler: update a new bid price, reset timer thread
+* @param room_id(string): room id
+* @param user_id(string): user id
+* @param client_socket(SOCKET): contain socket of request user
+* @no return
+*/
 void bid_handler(int price, string room_id, string user_id, SOCKET client_socket);
+
+/*
+* @function buy_immediately_handler: set new owner of the item, and timer thread immediately
+* @param room_id(string): room id
+* @param user_id(string): user id
+* @param client_socket(SOCKET): contain socket of request user
+* @no return
+*/
 void buy_immediately_handler(string room_id, string user_id, SOCKET client_socket);
+
+/*
+* @function create_room_handler: create and run new timer thread, create new room in rooms list
+* @param user_id(string): user id
+* @param item_name(string): name of the item
+* @param item_description(string): description of the item
+* @param starting_price(int): starting price of the item
+* @param buy_immediately_price(int): price that user can buy immediately
+* @param client_socket(SOCKET): contain socket of request user
+* @no return
+*/
 void create_room_handler(
 	string user_id,
 	string item_name,
@@ -49,14 +105,29 @@ void create_room_handler(
 	int starting_price,
 	int buy_immediately_price,
 	SOCKET client_socket);
-void leave_room_handler(string room_id, string user_id, SOCKET client_socket);
 
+/*
+* @function leave_room_handler: remove user from participant list of that room
+* @param room_id(string): room id
+* @param user_id(string): user id
+* @param client_socket(SOCKET): contain socket of request user
+* @no return
+*/
+void leave_room_handler(string room_id, string user_id, SOCKET client_socket);
+ 
+/*
+ * @thread timer_thread: time count and notify the owner when the time is over
+ */
 unsigned __stdcall timer_thread(void *param);
+
+/*
+* @thread worker_thread: handle connection, new children worker_thread will be created when the number of parent thread exccess maximum number of 64 clients
+*/
 unsigned __stdcall worker_thread(void *param);
 
 int main(int argc, char* argv[])
 {
-	//Step 1: Initiate WinSock
+	//Initiate WinSock
 	WSADATA wsaData;
 	WORD wVersion = MAKEWORD(2, 2);
 	if (WSAStartup(wVersion, &wsaData)) {
@@ -64,11 +135,11 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	//Step 2: Construct LISTEN socket	
+	//Construct LISTEN socket	
 	SOCKET listenSock;
 	listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-	//Step 3: Bind address to socket
+	//Bind address to socket
 	sockaddr_in serverAddr;
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(PORT);
@@ -81,7 +152,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	//Step 4: Listen request from client
+	// Listen request from client
 	if (listen(listenSock, 10)) {
 		printf("Error %d: Cannot place server socket in state LISTEN.", WSAGetLastError());
 		return 0;
@@ -89,7 +160,7 @@ int main(int argc, char* argv[])
 
 	printf("Server started!\n");
 
-
+	// bind listen sock to the first worker thread
 	SOCKET param[2];
 	param[0] = listenSock;
 	param[1] = INVALID_SOCKET;
@@ -102,27 +173,26 @@ int main(int argc, char* argv[])
 }
 
 unsigned __stdcall worker_thread(void *param) {
+	// resource initialization
 	DWORD		nEvents = 0;
 	DWORD		index;
 	SOCKET		socks[WSA_MAXIMUM_WAIT_EVENTS];
 	WSAEVENT	events[WSA_MAXIMUM_WAIT_EVENTS];
 	WSANETWORKEVENTS sockEvent;
-	int thread_capacity_is_full = 0;
-
 	SOCKET connSock;
 	sockaddr_in clientAddr;
-	int clientAddrLen = sizeof(clientAddr);
-	int ret, i;
-	//get listenSock from param
+	int thread_capacity_is_full = 0, ret, clientAddrLen = sizeof(clientAddr);
+
+	//get listenSock from parent worker thread
 	SOCKET listenSock = ((SOCKET*)param)[0];
-	//get connSock from param if exists( not equal INVALID_SOCKET)
 	if (((SOCKET*)param)[1] != INVALID_SOCKET)
 	{
 		SOCKET connSock = ((SOCKET*)param)[1];
-		//add connSock to array of client, then create an event and assign it to connSock with reading and closing event
+		//add connSock to array of clients, 
+		//create an event and assign it to connSock with reading and closing event
 		socks[1] = connSock;
 		events[1] = WSACreateEvent();
-		cout << "Accept new client from " << endl;
+		cout << "New client connected" << endl;
 		WSAEventSelect(socks[1], events[1], FD_READ | FD_CLOSE);
 		nEvents++;
 	}
@@ -135,7 +205,7 @@ unsigned __stdcall worker_thread(void *param) {
 	// with the listening socket and newEvent   
 	WSAEventSelect(socks[0], events[0], FD_ACCEPT | FD_CLOSE);
 
-	for (i = 1; i < WSA_MAXIMUM_WAIT_EVENTS; i++) {
+	for (int i = 1; i < WSA_MAXIMUM_WAIT_EVENTS; i++) {
 		if (i == 1 && ((SOCKET*)param)[1] != INVALID_SOCKET) 
 			continue;
 		socks[i] = 0;
@@ -158,19 +228,16 @@ unsigned __stdcall worker_thread(void *param) {
 		if (sockEvent.lNetworkEvents & FD_ACCEPT) {
 			if (sockEvent.iErrorCode[FD_ACCEPT_BIT] != 0) {
 				printf("FD_ACCEPT failed with error %d\n", sockEvent.iErrorCode[FD_READ_BIT]);
-				// handle client error here
 			}
 
 			if ((connSock = accept(socks[index], (sockaddr *)&clientAddr, &clientAddrLen)) == SOCKET_ERROR) {
 				printf("Error %d: Cannot permit incoming connection.\n", WSAGetLastError());
-				// handle client error here
-				break;
 			}
 
 			//Add new socket into socks array
 			int i;
 			if (nEvents == WSA_MAXIMUM_WAIT_EVENTS) {
-				//check if there was no thread was created before
+				//check if there is no thread was created before
 				if (thread_capacity_is_full == 0)
 				{
 					SOCKET param[2];
@@ -229,7 +296,6 @@ unsigned __stdcall worker_thread(void *param) {
 		if (sockEvent.lNetworkEvents & FD_CLOSE) {
 			if (sockEvent.iErrorCode[FD_CLOSE_BIT] != 0) {
 				printf("An account has unexpectedly disconnected");
-				//printf("FD_CLOSE failed with error %d\n", sockEvent.iErrorCode[FD_CLOSE_BIT]);
 			}
 			// log out user from joined room
 			for (int i = 0; i < users.size(); i++)
@@ -273,11 +339,11 @@ unsigned __stdcall timer_thread(void *param) {
 
 
 void log_in_handler(string email, string password, SOCKET client_socket) {
-	string message = login(email, password, client_socket, &users, &user_id_count);
+	string message = login(email, password, client_socket, &users);
 	byte_stream_sender(client_socket, message);
 };
 void log_out_handler(string user_id, SOCKET client_socket) {
-	string message = logout(user_id, &users);
+	string message = logout(user_id, &users, &rooms);
 	byte_stream_sender(client_socket, message);
 };
 void show_rooms_handler(SOCKET client_socket) {
