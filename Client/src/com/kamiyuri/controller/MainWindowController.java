@@ -12,6 +12,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -70,13 +72,58 @@ public class MainWindowController extends BaseController implements Initializabl
         super(auctionManager, viewFactory, fxmlName);
     }
 
+    private class BidPopup{
+
+        @FXML
+        private TextField bidPriceField;
+
+        Boolean result = false;
+        String input;
+
+        @FXML
+        void cancelBtnAction() {
+            close();
+        }
+
+        @FXML
+        void submitBtnAction() {
+            result = true;
+            input = bidPriceField.getText();
+            close();
+        }
+
+        void close(){
+            Stage stage = (Stage) bidPriceField.getScene().getWindow();
+            stage.close();
+        }
+    }
+
     @FXML
     void bidBtnAction() {
-//        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-//        Optional<ButtonType> result = alert.showAndWait();
-//         if (result.equals(ButtonType.OK)){
-//             //goi bid
-//         }
+        BidPopup bidPopup = new BidPopup();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("bidPopup.fxml"));
+        fxmlLoader.setController(bidPopup);
+        Parent parent;
+        try {
+            parent = fxmlLoader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        Scene scene = new Scene(parent);
+        Stage stage = new Stage();
+
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initOwner(roomIdLabel.getScene().getWindow().getScene().getWindow());
+
+        stage.setScene(scene);
+        stage.setResizable(false);
+
+        stage.showAndWait();
+
+        if(bidPopup.result){
+            auctionManager.bid(bidPopup.input);
+        }
     }
 
     @FXML
@@ -84,8 +131,10 @@ public class MainWindowController extends BaseController implements Initializabl
         Consumer<Void> callback = unused -> {
             auctionManager.buy();
         };
-        showPopup(callback, "Bạn chắc chắn muốn mua luôn vật phẩm này?");
+        Popup popup = new Popup((Stage) itemNameLabel.getScene().getWindow());
+        popup.show(callback,"Bạn chắc chắn muốn mua luôn vật phẩm này?");
     }
+    private Popup popup;
 
     @FXML
     void createRoomAction() {
@@ -108,6 +157,8 @@ public class MainWindowController extends BaseController implements Initializabl
         stage.setResizable(false);
 
         stage.show();
+
+        popup = new Popup((Stage) itemNameLabel.getScene().getWindow());
     }
 
     @FXML
@@ -115,7 +166,8 @@ public class MainWindowController extends BaseController implements Initializabl
         Consumer<Void> callback = unused -> {
             auctionManager.logout();
         };
-        showPopup(callback, "Bạn chắc chắn muốn đăng xuất?");
+        Popup popup = new Popup((Stage) itemNameLabel.getScene().getWindow());
+        popup.show(callback, "Bạn chắc chắn muốn đăng xuất?");
 
         if(auctionManager.handleLogout()){
             Stage stage = (Stage) userNameLabel.getScene().getWindow();
@@ -196,9 +248,4 @@ public class MainWindowController extends BaseController implements Initializabl
             noticLabel.setVisible(true);
         }
     };
-
-    private void showPopup(Consumer<Void> callback, String content){
-        Popup popup = new Popup(callback, content, (Stage) itemNameLabel.getScene().getWindow());
-        popup.show();
-    }
 }

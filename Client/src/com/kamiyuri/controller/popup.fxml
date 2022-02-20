@@ -7,9 +7,9 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="148.0" prefWidth="331.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <Button layoutX="75.0" layoutY="98.0" mnemonicParsing="false" onAction="#cancelBtnAction" text="Không" />
-        <Button layoutX="211.0" layoutY="98.0" mnemonicParsing="false" onAction="#submitBtnAction" prefHeight="25.0" prefWidth="51.0" text="Có" />
-        <Label fx:id="contentLabel" layoutX="47.0" layoutY="26.0" text="Bạn chắc chắn muốn đấu giá sản phẩm này ?" />
+        <Button fx:id="cancelBtn" layoutX="72.0" layoutY="98.0" mnemonicParsing="false" onAction="#cancelBtnAction" prefHeight="25.0" prefWidth="59.0" text="Không" />
+        <Button layoutX="193.0" layoutY="98.0" mnemonicParsing="false" onAction="#submitBtnAction" text="Tiếp tục" />
+        <Label fx:id="contentLabel" alignment="CENTER" layoutY="1.0" prefHeight="86.0" prefWidth="331.0" text="Bạn chắc chắn muốn đấu giá sản phẩm này ?" textAlignment="CENTER" wrapText="true" />
       <Label fx:id="bidLabel" layoutX="49.0" layoutY="54.0" text="Nhập giá " visible="false" />
       <TextField fx:id="bidField" layoutX="101.0" layoutY="50.0" prefHeight="25.0" prefWidth="180.0" visible="false" />
     </children>

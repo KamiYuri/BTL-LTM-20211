@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Modality;
@@ -17,7 +18,10 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
-public class Popup {
+public class Popup{
+
+    @FXML
+    private Button cancelBtn;
     private Stage owner;
     private String content;
     @FXML
@@ -31,13 +35,11 @@ public class Popup {
 
     private Consumer<Void> callback;
 
-    public Popup(Consumer<Void> callback, String content, Stage owner) {
-        this.content = content;
-        this.callback = callback;
+    public Popup(Stage owner) {
         this.owner = owner;
     }
 
-    public void show(){
+    public void show(Consumer<Void> callback, String content){
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("popup.fxml"));
         fxmlLoader.setController(this);
         Parent parent;
@@ -58,18 +60,27 @@ public class Popup {
 
         contentLabel.setText(content);
 
+        if(callback == null){
+            cancelBtn.setVisible(false);
+        }else{
+            this.callback = callback;
+        }
+
         stage.show();
     }
 
     @FXML
     void submitBtnAction() {
         Stage stage = (Stage)bidLabel.getScene().getWindow();
-        callback.accept(null);
         stage.close();
     }
     @FXML
     void cancelBtnAction() {
         Stage stage = (Stage) contentLabel.getScene().getWindow();
         stage.close();
+    }
+
+    public void setCallback(Consumer<Void> callback) {
+        this.callback = callback;
     }
 }
