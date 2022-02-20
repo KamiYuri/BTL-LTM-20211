@@ -15,6 +15,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.*;
@@ -62,6 +63,8 @@ public class AuctionManager {
         }
     };
     private String currentPrice;
+    private Label noticLabel = new Label();
+    private Popup popup = new Popup(null);
 
     public String getCurrentPrice() {
         return currentPrice;
@@ -73,16 +76,31 @@ public class AuctionManager {
         this.connectionThread.start();
 
         noticfications.addListener((ListChangeListener<? super String>) observable -> {
-            noticfications.remove(0);
+            handleNotic();
         });
+    }
+
+    private void handleNotic() {
+        char code = noticfications.get(0).charAt(1);
+        if(code == '0'){
+            if(popup != null){
+                popup.show(null, "Sản phẩm đã được bán");
+            }
+        }
+         if(code == '1'){
+             if(popup != null){
+                 popup.show(null, "Thời gian còn lại " + noticfications.get(0).substring(2) + " phút.");
+             }
+        }
+        noticfications.remove(0);
+    }
+
+    public Label getNoticLabel() {
+        return noticLabel;
     }
 
     private void setupConnectionThread() {
         this.connectionThread.setResponseCallback(this.getResponseCallback);
-    }
-
-    public TreeItem<String> getRoomsRoot() {
-        return this.root;
     }
 
     public void setRoot(TreeItem<String> root) {
@@ -354,12 +372,20 @@ public class AuctionManager {
         service.setOnSucceeded(event -> {
             switch (bidResponse){
                 case "50":
-                    noticCallback.accept("Đấu giá thành công!");
+                    if(popup != null){
+                        popup.show(null, "Đấu giá thành công!");
+                    }
                     break;
                 case "51":
-                    noticCallback.accept("Đấu giá thất bại. Giá đưa ra thấp hơn giá hiện tại của vật phẩm.");
+                    if(popup != null) {
+                        popup.show(null, "Đấu giá thất bại. Giá đưa ra thấp hơn giá hiện tại của vật phẩm.");
+                    }
+                    break;
                 case "52":
-                    noticCallback.accept("Chủ phòng không thể tham gia đấu giá.");
+                    if(popup != null) {
+                        popup.show(null, "Chủ phòng không thể tham gia đấu giá.");
+                    }
+                    break;
             }
         });
     }
@@ -393,13 +419,19 @@ public class AuctionManager {
         service.setOnSucceeded(event -> {
             switch (bidResponse){
                 case "60":
-                    noticCallback.accept("Bạn đã mua thành công vật phẩm.");
+                    if(popup != null) {
+                        popup.show(null, "Bạn đã mua thành công vật phẩm.");
+                    }
                     break;
                 case "61":
-                    noticCallback.accept("Vật phẩm đã được mua bởi người khác.");
+                    if(popup != null) {
+                        popup.show(null, "Vật phẩm đã được mua bởi người khác.");
+                    }
                     break;
                 case "62":
-                    noticCallback.accept("Người tạo phòng không thể mua.");
+                    if(popup != null) {
+                        popup.show(null, "Người tạo phòng không thể mua.");
+                    }
                     break;
             }
         });

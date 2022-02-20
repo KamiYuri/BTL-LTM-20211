@@ -42,6 +42,7 @@ public class ConnectionThread implements Runnable{
         while (true){
             if(scanner.hasNext()) {
                 response = scanner.next();
+                System.out.println(response);
                 this.getResponseCallback.accept(response);
             }
         }
