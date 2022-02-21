@@ -2,6 +2,7 @@
 #include "communication.h"
 #include "status_code.h"
 #include "helpers.h"
+#include <iostream>
 using namespace std;
 char send_buff[BUFF_SIZE];
 string byte_stream_receiver(string* message_queue, string received_message) {
@@ -13,10 +14,12 @@ string byte_stream_receiver(string* message_queue, string received_message) {
 		user_message = (*message_queue).substr(0, delimiter_position);
 
 	*message_queue = (*message_queue).substr(delimiter_position + 2, (*message_queue).length() - delimiter_position);
+	cout << "RECEIVED: " << user_message << endl;
 	return user_message;
 }
 
 void byte_stream_sender(SOCKET client, string message) {
+	cout << "SEND: " << message << endl;
 	message = message + ENDING_DELIMITER;
 	int message_length = message.length();
 	int left_bytes = message_length;
@@ -66,8 +69,10 @@ int Send(SOCKET s, char *buff, int size, int flags) {
 	int n;
 
 	n = send(s, buff, size, flags);
-	if (n == SOCKET_ERROR)
+	if (n == SOCKET_ERROR) {
+		printf("%s \n", buff);
 		printf("Error %d: Cannot send data.\n", WSAGetLastError());
+	}
 
 	return n;
 }
