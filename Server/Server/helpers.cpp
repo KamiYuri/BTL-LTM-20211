@@ -121,7 +121,7 @@ string buy_immediately(string room_id, string user_id, vector<Room> *rooms) {
 		if ((*rooms)[i].room_id == room_id) {
 			if ((*rooms)[i].room_creator_id != user_id) {
 				if ((*rooms)[i].owner == "-1") {
-					(*rooms)[i].owner == user_id;
+					(*rooms)[i].owner = user_id;
 					return SUCCESS_BUY_IMMEDIATELY + to_string(i);
 				}
 				else return ALREADY_SOLD;

@@ -295,7 +295,7 @@ unsigned __stdcall worker_thread(void *param) {
 
 		if (sockEvent.lNetworkEvents & FD_CLOSE) {
 			if (sockEvent.iErrorCode[FD_CLOSE_BIT] != 0) {
-				printf("An account has unexpectedly disconnected");
+				printf("An account has unexpectedly disconnected \n");
 			}
 			// log out user from joined room
 			for (int i = 0; i < users.size(); i++)
