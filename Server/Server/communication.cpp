@@ -2,6 +2,7 @@
 #include "communication.h"
 #include "status_code.h"
 #include "helpers.h"
+using namespace std;
 char send_buff[BUFF_SIZE];
 string byte_stream_receiver(string* message_queue, string received_message) {
 	*message_queue = *message_queue + received_message;

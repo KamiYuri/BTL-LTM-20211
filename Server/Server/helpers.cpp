@@ -155,6 +155,7 @@ string leave_room(string room_id, string user_id, vector<Room> *rooms, vector<Us
 			for (int j = 0; j < ((*rooms)[i].client_list).size(); j++) {
 				if (((*rooms)[i].client_list)[j].user_id == user_id) {
 					((*rooms)[i].client_list).erase(((*rooms)[i].client_list).begin() + j);
+					cout << "Left user in room: "<<(*rooms)[i].client_list.size() << endl;
 					return SUCCESS_LEAVE_ROOM;
 				}
 			}
@@ -163,6 +164,7 @@ string leave_room(string room_id, string user_id, vector<Room> *rooms, vector<Us
 	for (int i = 0; i < (*users).size(); i++) {
 		if ((*users)[i].user_id == user_id) {
 			(*users)[i].joined_room_id = "-1";
+			break;
 		}
 	}
 	return ROOM_ID_NOT_FOUND;

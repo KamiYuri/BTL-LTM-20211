@@ -23,7 +23,7 @@
 using namespace std;
 
 char recv_buff[BUFF_SIZE];
-string message_queue[10000]; //  temp use, change size later
+string message_queue ="";
 int ret, room_id_count = 1;
 HANDLE hthread;
 vector<User> users;
@@ -285,7 +285,7 @@ unsigned __stdcall worker_thread(void *param) {
 			else {
 				recv_buff[ret] = 0;
 				string received_message = recv_buff;
-				string message = byte_stream_receiver(message_queue, received_message);
+				string message = byte_stream_receiver(&message_queue, received_message);
 				filter_request(message, socks[index]);
 
 				//reset event
@@ -320,7 +320,7 @@ unsigned __stdcall timer_thread(void *param) {
 	int count = 0;
 	string room_id = (char *)param;
 	while (count < 3) {
-		int test_time = 60000;
+		int test_time = 30000;
 		Sleep(test_time);
 		count++;
 		string message = TIME_NOTIFICATION + to_string(3 - count);
