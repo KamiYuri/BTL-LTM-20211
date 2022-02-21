@@ -1,5 +1,7 @@
 package com.kamiyuri.tcp;
 
+import com.kamiyuri.controller.services.Delimiter;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -39,7 +41,7 @@ public class ConnectionThread implements Runnable {
         while (true) {
             if (scanner.hasNext()) {
                 response = scanner.next();
-                System.out.println(response);
+                System.out.println("response: " + response);
                 this.getResponseCallback.accept(response);
             }
         }
@@ -53,7 +55,8 @@ public class ConnectionThread implements Runnable {
     }
 
     public void send(String message) {
-        this.out.print(message);
+        System.out.println("request: " + message);
+        this.out.print(message + Delimiter.One());
         this.out.flush();
     }
 
