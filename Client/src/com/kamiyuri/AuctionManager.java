@@ -1,16 +1,16 @@
 package com.kamiyuri;
 
-import com.kamiyuri.controller.services.GetRoomsService;
-import com.kamiyuri.controller.services.LeaveRoomService;
-import com.kamiyuri.controller.services.RequestType;
+import com.kamiyuri.controller.services.*;
 import com.kamiyuri.model.Account;
 import com.kamiyuri.model.Room;
 import com.kamiyuri.tcp.ConnectionThread;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Worker;
 import javafx.scene.control.TreeItem;
 
 import java.io.IOException;
+import java.util.Properties;
 import java.util.function.Consumer;
 
 public class AuctionManager {
@@ -54,6 +54,11 @@ public class AuctionManager {
     };
     private Room selectedRoom;
     private String selectedRoomCurrentPrice;
+    private boolean leaved;
+
+    public boolean isLeaved() {
+        return leaved;
+    }
 
     public AuctionManager() throws IOException {
         this.connectionThread = new ConnectionThread();
@@ -144,12 +149,29 @@ public class AuctionManager {
     }
 
     public void setSelectedRoom(Room item) {
-        if (selectedRoom.getRoomId() != item.getRoomId()) {
-            LeaveRoomService leaveRoomService = new LeaveRoomService(this);
-            leaveRoomService.start();
+        if(selectedRoom == null) {
+            this.selectedRoom = item;
         }
 
-        this.selectedRoom = item;
+        if (selectedRoom != null && selectedRoom.getRoomId() != item.getRoomId()) {
+            leaveRoomResponse = null;
+
+            Properties data = new Properties();
+            data.put("userId", getAccount().getUserId());
+            data.put("roomId", getSelectedRoom().getRoomId());
+
+            String request = RequestFactory.getRequest(RequestType.LEAVE_ROOM, data);
+            sendRequest(request);
+
+            String response;
+            do {
+                response = getLeaveRoomResponse();
+            } while (response == null);
+
+            System.out.println("leaved " + selectedRoom.getRoomId());
+
+            this.selectedRoom = item;
+        }
     }
 
     public void setSelectedRoomCurrentPrice(String currentPrice) {
@@ -170,5 +192,9 @@ public class AuctionManager {
 
     public void diconnect() {
         connectionThread.disconnect();
+    }
+
+    public void setLeaved(boolean value) {
+        this.leaved = value;
     }
 }

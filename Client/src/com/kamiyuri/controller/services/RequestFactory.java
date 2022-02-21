@@ -22,36 +22,41 @@ public class RequestFactory {
                 return createBuyRequest(data);
             case CREATE_ROOM:
                 return createCreateRoomRequest(data);
-            default:
-                return null;
+            case LEAVE_ROOM:
+                return createLeaveRoomRequest(data);
         }
+        return null;
     }
 
     private static String createCreateRoomRequest(Properties data) {
-        return "CREATE" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("itemName") + Delimiter.Two() + data.getProperty("itemDescription") + Delimiter.Two() + data.getProperty("itemStartPrice") + Delimiter.Two() + data.getProperty("itemBuyPrice") + Delimiter.One();
+        return "CREATE" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("itemName") + Delimiter.Two() + data.getProperty("itemDescription") + Delimiter.Two() + data.getProperty("itemStartPrice") + Delimiter.Two() + data.getProperty("itemBuyPrice");
     }
 
     private static String createBuyRequest(Properties data) {
-        return "BUYNOW" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("roomId") + Delimiter.One();
+        return "BUYNOW" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("roomId");
     }
 
     private static String createBidRequest(Properties data) {
-        return "BID___" + data.getProperty("price") + Delimiter.Two() + data.getProperty("userId") + Delimiter.Two() + data.getProperty("roomId") + Delimiter.One();
+        return "BID___" + data.getProperty("price") + Delimiter.Two() + data.getProperty("userId") + Delimiter.Two() + data.getProperty("roomId");
     }
 
     private static String createJoinRoomRequest(Properties data) {
-        return "JOIN__" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("roomId") + Delimiter.One();
+        return "JOIN__" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("roomId");
     }
 
     private static String createShowRoomRequest() {
-        return "SHOW__" + Delimiter.One();
+        return "SHOW__";
     }
 
     private static String createLogoutRequest(Properties data) {
-        return "LOGOUT" + data.getProperty("userId") + Delimiter.One();
+        return "LOGOUT" + data.getProperty("userId");
     }
 
     private static String createLoginRequest(Properties data) {
-        return "LOGIN_" + data.getProperty("username") + Delimiter.Two() + data.getProperty("password") + Delimiter.One();
+        return "LOGIN_" + data.getProperty("username") + Delimiter.Two() + data.getProperty("password");
+    }
+
+    private static String createLeaveRoomRequest(Properties data) {
+        return "LEAVE_" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("roomId");
     }
 }

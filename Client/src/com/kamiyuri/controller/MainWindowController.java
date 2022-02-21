@@ -16,7 +16,9 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Scanner;
 
 public class MainWindowController extends BaseController implements Initializable {
     private Room selectedRoom;
@@ -143,7 +145,7 @@ public class MainWindowController extends BaseController implements Initializabl
         setUpTreeView();
         setUpRoomSelection();
         setUpNotificationHandle();
-        setUpCloseConnection();
+//        setUpCloseConnection();
     }
 
     private void setUpCloseConnection() {
@@ -226,33 +228,66 @@ public class MainWindowController extends BaseController implements Initializabl
             if (item != null) {
                 FilteredList<Room> roomFilteredList = auctionManager.getRoomList().filtered(room -> room.getRoomId().equals(item.getValue()));
                 selectedRoom = roomFilteredList.get(0);
+
                 auctionManager.setSelectedRoom(selectedRoom);
+                System.out.println(auctionManager.getSelectedRoom().getRoomId());
 
                 auctionManager.setJoinRoomResponse(null);
 
-                JoinRoomService joinRoomService = new JoinRoomService(auctionManager);
-                joinRoomService.start();
-                joinRoomService.setOnSucceeded(event -> {
-                    JoinRoomResult joinRoomResult = joinRoomService.getValue();
+                Properties data = new Properties();
+                data.put("userId", auctionManager.getAccount().getUserId());
+                data.put("roomId", auctionManager.getSelectedRoom().getRoomId());
 
-                    switch (joinRoomResult) {
-                        case SUCCESS:
-                            showData(true);
-                            break;
-                        case BOUGHT_BY_ANOTHER:
-                            notificationLabel.setText("Vật phẩm đã được mua bởi người khác.");
-                            showData(false);
-                            break;
-                        case NO_ONE_BUY:
-                            notificationLabel.setText("Phiên đấu giá đã kết thúc. Vật phẩm chưa được bán.");
-                            showData(false);
-                            break;
-                        case BOUGHT_BY_USER:
-                            notificationLabel.setText("Chúc mừng. Bạn đã mua được vật phẩm");
-                            showData(false);
-                            break;
+                auctionManager.setJoinRoomResponse(null);
+                String request = RequestFactory.getRequest(RequestType.JOIN_ROOM, data);
+                System.out.println("join request" + request);
+                auctionManager.sendRequest(request);
+                String response;
+                do {
+                    response = auctionManager.getJoinRoomResponse();
+                } while (response == null);
+
+                JoinRoomResult joinRoomResult;
+
+                if (response.charAt(1) == '1') {
+                    Scanner scanner = new Scanner(response.substring(2));
+                    scanner.useDelimiter(Delimiter.Two());
+
+                    String owner = scanner.next();
+                    String currentPrice = scanner.next();
+
+                    auctionManager.setSelectedRoomCurrentPrice(currentPrice);
+
+                    if (owner.equals("0")) {
+                        joinRoomResult = JoinRoomResult.NO_ONE_BUY;
+                    } else {
+                        if (owner.equals(auctionManager.getAccount().getUserId())) {
+                            joinRoomResult = JoinRoomResult.BOUGHT_BY_USER;
+                        } else {
+                            joinRoomResult = JoinRoomResult.BOUGHT_BY_ANOTHER;
+                        }
                     }
-                });
+                } else {
+                    joinRoomResult = JoinRoomResult.SUCCESS;
+                }
+
+                switch (joinRoomResult) {
+                    case SUCCESS:
+                        showData(true);
+                        break;
+                    case BOUGHT_BY_ANOTHER:
+                        notificationLabel.setText("Vật phẩm đã được mua bởi người khác.");
+                        showData(false);
+                        break;
+                    case NO_ONE_BUY:
+                        notificationLabel.setText("Phiên đấu giá đã kết thúc. Vật phẩm chưa được bán.");
+                        showData(false);
+                        break;
+                    case BOUGHT_BY_USER:
+                        notificationLabel.setText("Chúc mừng. Bạn đã mua được vật phẩm");
+                        showData(false);
+                        break;
+                }
             }
         });
     }

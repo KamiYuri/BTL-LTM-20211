@@ -66,7 +66,7 @@ public class LoginWindowController extends BaseController implements Initializab
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        setUpCloseConnection();
+//        setUpCloseConnection();
     }
 
     private void setUpCloseConnection() {
