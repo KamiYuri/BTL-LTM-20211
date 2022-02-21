@@ -1,12 +1,10 @@
 package com.kamiyuri.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Properties;
 
 public class Account {
-    private String username;
-    private String password;
+    private final String username;
+    private final String password;
     private String userId;
 
     public Account(String username, String password) {
@@ -30,7 +28,7 @@ public class Account {
         this.userId = userId;
     }
 
-    public Properties getData(){
+    public Properties getData() {
         Properties properties = new Properties();
         properties.put("username", this.username);
         properties.put("password", this.password);

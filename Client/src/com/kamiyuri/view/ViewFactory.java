@@ -1,17 +1,11 @@
 package com.kamiyuri.view;
 
 import com.kamiyuri.AuctionManager;
-import com.kamiyuri.controller.BaseController;
-import com.kamiyuri.controller.CreateRoomWindowController;
-import com.kamiyuri.controller.LoginWindowController;
-import com.kamiyuri.controller.MainWindowController;
+import com.kamiyuri.controller.*;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,17 +36,7 @@ public class ViewFactory {
         stage.setScene(scene);
         stage.setResizable(false);
 
-//        stage.setOnCloseRequest(event -> {
-//            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-//            Optional<ButtonType> option = alert.showAndWait();
-//            if(option.get() == ButtonType.OK){
-//                auctionManager.diconnect();
-//                stage.close();
-//            } else if(option.get() == ButtonType.CANCEL) {
-//                return;
-//            }
-//
-//        });
+
         stage.show();
         activeStages.add(stage);
     }
@@ -70,6 +54,16 @@ public class ViewFactory {
 
     public void showMainWindow() {
         BaseController controller = new MainWindowController(auctionManager, this, "MainWindow.fxml");
+        initializeStage(controller);
+    }
+
+    public void showCreateRoomWindow() {
+        BaseController controller = new CreateRoomWindowController(auctionManager, this, "CreateRoomWindow.fxml");
+        initializeStage(controller);
+    }
+
+    public void showBidWindow() {
+        BaseController controller = new BidWindowController(auctionManager, this, "BidWindow.fxml");
         initializeStage(controller);
     }
 }

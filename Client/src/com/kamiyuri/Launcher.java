@@ -2,6 +2,7 @@ package com.kamiyuri;
 
 import com.kamiyuri.view.ViewFactory;
 import javafx.application.Application;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -18,13 +19,12 @@ public class Launcher extends Application {
         try {
             this.auctionManager = new AuctionManager();
         } catch (IOException e) {
-//            Alert alert = new Alert(Alert.AlertType.ERROR);
-//            alert.setTitle("loi");
-//            alert.setHeaderText("loi ket noi");
-//            alert.setContentText(e.getMessage());
-//
-//            alert.showAndWait();
-//            return;
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Đã xảy ra lỗi.");
+            alert.setHeaderText("Không thể kết nối đến máy chủ.");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
+            return;
         }
 
         ViewFactory viewFactory = new ViewFactory(auctionManager);

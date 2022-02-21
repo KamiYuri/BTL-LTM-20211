@@ -1,4 +1,4 @@
-package com.kamiyuri.TCP;
+package com.kamiyuri.controller.services;
 
 import java.util.Properties;
 
@@ -6,8 +6,8 @@ public class RequestFactory {
     public RequestFactory() {
     }
 
-    public static String getRequest(RequestType type, Properties data){
-        switch (type){
+    public static String getRequest(RequestType type, Properties data) {
+        switch (type) {
             case LOGIN:
                 return createLoginRequest(data);
             case LOGOUT:
@@ -28,7 +28,7 @@ public class RequestFactory {
     }
 
     private static String createCreateRoomRequest(Properties data) {
-        return "CREATE" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("itemName") + Delimiter.Two() + data.getProperty("itemDescription") + Delimiter.Two()  + data.getProperty("itemStartPrice") + Delimiter.Two() + data.getProperty("itemBuyPrice") + Delimiter.One();
+        return "CREATE" + data.getProperty("userId") + Delimiter.Two() + data.getProperty("itemName") + Delimiter.Two() + data.getProperty("itemDescription") + Delimiter.Two() + data.getProperty("itemStartPrice") + Delimiter.Two() + data.getProperty("itemBuyPrice") + Delimiter.One();
     }
 
     private static String createBuyRequest(Properties data) {

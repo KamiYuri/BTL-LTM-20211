@@ -1,4 +1,4 @@
-package com.kamiyuri.TCP;
+package com.kamiyuri.controller.services;
 
 public enum RequestType {
     LOGIN,

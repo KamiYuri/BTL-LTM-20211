@@ -60,8 +60,7 @@
                <font>
                   <Font name="System Bold" size="17.0" />
                </font></Label>
-            <Label fx:id="soldLabel" alignment="CENTER" layoutX="3.0" layoutY="38.0" prefHeight="41.0" prefWidth="200.0" text="Đã kết thúc đấu giá và có người đã mua được vật phẩm." textAlignment="CENTER" visible="false" wrapText="true" />
-            <Label fx:id="noticLabel" alignment="CENTER" layoutX="202.0" layoutY="50.0" prefHeight="17.0" prefWidth="200.0" text="Thời gian còn lại: 2 phút" visible="false" />
+            <Label fx:id="notificationLabel" alignment="CENTER" layoutX="-3.0" layoutY="40.0" prefHeight="41.0" prefWidth="408.0" text="Đã kết thúc đấu giá và có người đã mua được vật phẩm." textAlignment="CENTER" wrapText="true" />
             <Button fx:id="bidBtn" layoutX="74.0" layoutY="251.0" mnemonicParsing="false" onAction="#bidBtnAction" text="Đấu giá" />
             <Button fx:id="buyBtn" layoutX="283.0" layoutY="251.0" mnemonicParsing="false" onAction="#buyBtnAction" text="Mua" />
          </children></AnchorPane>

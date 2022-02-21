@@ -1,13 +1,11 @@
 package com.kamiyuri.controller.services;
 
 import com.kamiyuri.AuctionManager;
-import com.kamiyuri.TCP.RequestFactory;
-import com.kamiyuri.controller.LoginResult;
 import com.kamiyuri.model.Account;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
-import static com.kamiyuri.TCP.RequestType.LOGIN;
+import static com.kamiyuri.controller.services.RequestType.LOGIN;
 
 public class LoginService extends Service<LoginResult> {
 
