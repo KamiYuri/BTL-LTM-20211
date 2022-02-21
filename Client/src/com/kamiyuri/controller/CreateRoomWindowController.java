@@ -45,6 +45,8 @@ public class CreateRoomWindowController extends BaseController {
             data.put("itemStartPrice", itemStartPriceField.getText());
             data.put("itemBuyPrice", itemBuyField.getText());
 
+            auctionManager.setCreateRoomResponse(null);
+
 
             CreateRoomService createRoomService = new CreateRoomService(auctionManager, data);
             createRoomService.start();
